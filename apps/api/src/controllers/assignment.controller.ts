@@ -1,0 +1,169 @@
+import { NextFunction, Request, Response } from "express";
+import mongoose from "mongoose";
+import { AssignmentModel } from "../models/assignment.model";
+import { createAssignmentSchema } from "../validations/assignment.validation";
+import { ApiError } from "../utils/api-error";
+import { sendSuccess } from "../utils/api-response";
+
+const parseQuestionTypes = (value: unknown) => {
+  if (!value) {
+    throw new ApiError(400, "Question types are required");
+  }
+
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    throw new ApiError(400, "Question types must be valid JSON");
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    throw new ApiError(400, "Question types must be valid JSON");
+  }
+};
+
+const extractTextFromUploadedFile = (file?: Express.Multer.File) => {
+  if (!file) {
+    return "";
+  }
+
+  const textBasedMimeTypes = ["text/plain", "text/markdown"];
+
+  if (textBasedMimeTypes.includes(file.mimetype)) {
+    return file.buffer.toString("utf-8");
+  }
+
+  return "";
+};
+
+export const createAssignment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const parsedQuestionTypes = parseQuestionTypes(req.body.questionTypes);
+
+    const validatedInput = createAssignmentSchema.parse({
+      title: req.body.title,
+      subject: req.body.subject,
+      className: req.body.className,
+      dueDate: req.body.dueDate,
+      questionTypes: parsedQuestionTypes,
+      additionalInstructions: req.body.additionalInstructions,
+    });
+
+    const file = req.file;
+    const sourceText = extractTextFromUploadedFile(file);
+
+    const assignmentPayload = {
+      title: validatedInput.title,
+      subject: validatedInput.subject,
+      className: validatedInput.className,
+      dueDate: validatedInput.dueDate,
+      questionTypes: validatedInput.questionTypes,
+      additionalInstructions: validatedInput.additionalInstructions,
+      sourceText,
+      status: "pending" as const,
+    };
+
+    const assignment = await AssignmentModel.create(
+      file
+        ? {
+            ...assignmentPayload,
+            uploadedFileName: file.originalname,
+            uploadedFileMimeType: file.mimetype,
+          }
+        : assignmentPayload,
+    );
+    sendSuccess(res, 201, "Assignment created successfully", {
+      assignment,
+    });
+
+    return
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAssignments = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) : Promise<void> => {
+  try {
+    const assignments = await AssignmentModel.find()
+      .sort({ createdAt: -1 })
+      .select("-sourceText");
+
+    sendSuccess(res, 200, "Assignments fetched successfully", {
+      assignments,
+    });
+    return
+  } catch (error) {
+    next(error);
+    return
+  }
+};
+
+export const getAssignmentById = async (
+  req: Request<{ assignmentId: string }>,
+  res: Response,
+  next: NextFunction,
+) : Promise<void> => {
+  try {
+    const { assignmentId } = req.params;
+
+    if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
+      throw new ApiError(400, "Invalid assignment id");
+    }
+
+    const assignment =
+      await AssignmentModel.findById(assignmentId).select("-sourceText");
+
+    if (!assignment) {
+      throw new ApiError(404, "Assignment not found");
+    }
+
+    sendSuccess(res, 200, "Assignment fetched successfully", {
+      assignment,
+    });
+
+    return
+  } catch (error) {
+    next(error);
+    return;
+  }
+};
+
+export const deleteAssignment = async (
+  req: Request<{ assignmentId: string }>,
+  res: Response,
+  next: NextFunction,
+) : Promise<void> => {
+  try {
+    const { assignmentId } = req.params;
+
+    if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
+      throw new ApiError(400, "Invalid assignment id");
+    }
+
+    const assignment = await AssignmentModel.findByIdAndDelete(assignmentId);
+
+    if (!assignment) {
+      throw new ApiError(404, "Assignment not found");
+    }
+
+    sendSuccess(res, 200, "Assignment deleted successfully", {
+      assignmentId,
+    });
+
+    return
+  } catch (error) {
+    next(error);
+    return
+  }
+};

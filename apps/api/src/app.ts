@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { env } from './config/env'
-import devRoutes from "./routes/dev.routes"
+import assignmentRoutes from './routes/assignment.routes'
 import {
   errorHandler,
   notFoundHandler,
@@ -28,8 +28,8 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+app.use("/api/assignments", assignmentRoutes);
 
-app.use("/api/dev", devRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema, Types } from "mongoose";
+import mongoose, { Document, Model, Schema, Types } from "mongoose";
 import { QuestionPaper } from "../types/assignment.types";
 
 export interface ResultDocument extends Document {
@@ -139,6 +139,6 @@ const resultSchema = new Schema<ResultDocument>(
   }
 );
 
-export const ResultModel =
-  mongoose.models.Result ||
+export const ResultModel: Model<ResultDocument> =
+  mongoose.models.Result as Model<ResultDocument> ||
   mongoose.model<ResultDocument>("Result", resultSchema);

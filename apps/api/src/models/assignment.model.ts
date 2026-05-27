@@ -1,7 +1,7 @@
-import mongoose, { Document, Schema } from "mongoose";
-import { AssignmentStatus , QuestionConfig } from "../types/assignment.types";
+import mongoose, { Document, Model, Schema } from "mongoose";
+import { AssignmentStatus, QuestionConfig } from "../types/assignment.types";
 
-export interface AssignmentDocument extends Document  {
+export interface AssignmentDocument extends Document {
   title: string;
   subject?: string;
   className?: string;
@@ -17,7 +17,6 @@ export interface AssignmentDocument extends Document  {
   createdAt: Date;
   updatedAt: Date;
 }
-
 
 const questionConfigSchema = new Schema<QuestionConfig>(
   {
@@ -47,7 +46,6 @@ const questionConfigSchema = new Schema<QuestionConfig>(
     _id: false,
   }
 );
-
 
 const assignmentSchema = new Schema<AssignmentDocument>(
   {
@@ -126,7 +124,6 @@ const assignmentSchema = new Schema<AssignmentDocument>(
   }
 );
 
-
-export const AssignmentModel =
-  mongoose.models.Assignment ||
+export const AssignmentModel: Model<AssignmentDocument> =
+  mongoose.models.Assignment as Model<AssignmentDocument> ||
   mongoose.model<AssignmentDocument>("Assignment", assignmentSchema);

@@ -65,3 +65,24 @@ Run infrastructure first:
 
 ```bash
 npm run docker:up
+
+## Assignment APIs
+
+### Create Assignment
+
+```bash
+POST /api/assignments
+
+
+### List Assignments
+
+GET /api/assignments
+
+
+### Get Assignment
+
+GET /api/assignments/:assignmentId
+
+### Delete Assignment
+
+DELETE /api/assignments/:assignmentId
