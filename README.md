@@ -124,3 +124,12 @@ Assignment input
   → Zod validation
   → MongoDB result
   → Structured frontend rendering
+
+  ## WebSocket Events
+
+The backend uses Socket.IO for real-time generation updates.
+
+### Client joins assignment room
+
+```ts
+socket.emit("assignment:join", assignmentId);

@@ -6,6 +6,7 @@ import { connectMongoDB, disconnectMongoDB } from "./config/db";
 import { connectRedis, disconnectRedis } from "./config/redis";
 
 import { startGenerationWorker, stopGenerationWorker } from "./workers/generation.worker";
+import { initSocketServer } from "./socket/socket.server";
 
 const startServer = async () => {
    try{
@@ -15,6 +16,7 @@ const startServer = async () => {
       startGenerationWorker();
      
       const server = http.createServer(app);
+      initSocketServer(server);
 
       server.listen(env.port, () => {
          console.log(`Server is running on port ${env.port}`);

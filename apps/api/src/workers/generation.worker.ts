@@ -13,6 +13,12 @@ import { AssignmentModel } from "../models/assignment.model";
 import { generateQuestionPaper } from "../services/ai-generation.service";
 import { ResultModel } from "../models/result.model";
 
+import {
+  emitGenerationCompleted,
+  emitGenerationFailed,
+  emitGenerationStatus,
+} from "../socket/socket.server";
+
 let generationWorker: Worker<
   GenerationJobPayload,
   GenerationJobResult,
@@ -57,9 +63,22 @@ export const startGenerationWorker = () => {
 
       await job.updateProgress(20);
 
+
+      emitGenerationStatus(assignmentId, {
+        status: "processing",
+        progress: 20,
+        message: "Assignment received. AI generation has started.",
+      });
+
       const paper = await generateQuestionPaper(assignment);
 
       await job.updateProgress(70);
+
+       emitGenerationStatus(assignmentId, {
+        status: "processing",
+        progress: 70,
+        message: "Question paper generated. Saving structured result.",
+      });
 
       await ResultModel.findOneAndUpdate(
         { assignmentId: assignment._id },
@@ -77,11 +96,23 @@ export const startGenerationWorker = () => {
 
       await job.updateProgress(90);
 
+       emitGenerationStatus(assignmentId, {
+        status: "processing",
+        progress: 90,
+        message: "Structured result saved. Finalizing assignment.",
+      });
+
+
       await AssignmentModel.findByIdAndUpdate(assignmentId, {
         status: "completed",
       });
 
       await job.updateProgress(100);
+
+       emitGenerationCompleted(assignmentId, {
+        progress: 100,
+        message: "Question paper generated successfully.",
+      });
 
       console.log(`Generation job completed: ${job.id}`);
 
@@ -108,6 +139,11 @@ export const startGenerationWorker = () => {
     if (assignmentId && mongoose.Types.ObjectId.isValid(assignmentId)) {
       await AssignmentModel.findByIdAndUpdate(assignmentId, {
         status: "failed",
+        errorMessage: error.message,
+      });
+
+      emitGenerationFailed(assignmentId, {
+        message: "Question paper generation failed.",
         errorMessage: error.message,
       });
     }
