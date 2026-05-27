@@ -1,6 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import { env } from './config/env'
+import devRoutes from "./routes/dev.routes"
+import {
+  errorHandler,
+  notFoundHandler,
+} from "./middlewares/error.middleware";
 
 const app = express();
 
@@ -22,5 +27,12 @@ app.get("/api/health", (_req, res) => {
     service: "assessment-creator-api",
   });
 });
+
+
+app.use("/api/dev", devRoutes);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
+
 
 export default app;
