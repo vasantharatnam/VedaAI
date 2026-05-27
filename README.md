@@ -45,3 +45,23 @@ Start them using:
 
 ```bash
 npm run docker:up
+
+## Backend Connections
+
+The Express backend connects to MongoDB and Redis during startup.
+
+MongoDB is used for:
+
+- Assignment records
+- Generated structured question papers
+
+Redis is used for:
+
+- BullMQ job queue
+- Background generation state
+- Worker coordination
+
+Run infrastructure first:
+
+```bash
+npm run docker:up
