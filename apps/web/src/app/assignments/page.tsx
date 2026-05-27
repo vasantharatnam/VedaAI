@@ -1,65 +1,124 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AppShell } from "../../../src/components/layout/app-shell";
-import { Button } from "../../../src/components/ui/button";
-
-function EmptyAssignmentIllustration() {
-  return (
-    <div className="relative h-[220px] w-[260px]">
-      <div className="absolute left-1/2 top-1/2 h-[190px] w-[190px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/65" />
-
-      <div className="absolute left-[72px] top-[42px] h-[126px] w-[96px] rounded-[14px] bg-white shadow-[0_14px_38px_rgba(0,0,0,0.08)]">
-        <div className="ml-4 mt-6 h-[10px] w-[46px] rounded-full bg-[#001a2e]" />
-        <div className="ml-4 mt-5 h-[10px] w-[62px] rounded-full bg-[#d9d9d9]" />
-        <div className="ml-4 mt-4 h-[10px] w-[58px] rounded-full bg-[#d9d9d9]" />
-        <div className="ml-4 mt-4 h-[10px] w-[70px] rounded-full bg-[#d9d9d9]" />
-      </div>
-
-      <div className="absolute left-[112px] top-[78px] flex h-[94px] w-[94px] items-center justify-center rounded-full border-[10px] border-[#c8bee3] bg-white/70">
-        <span className="text-[54px] font-black leading-none text-[#ff3b3b]">
-          ×
-        </span>
-      </div>
-
-      <div className="absolute left-[188px] top-[154px] h-[82px] w-[22px] rotate-[-45deg] rounded-full bg-[#d8ceef]" />
-
-      <div className="absolute right-[28px] top-[32px] h-[42px] w-[64px] rounded-[8px] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
-        <div className="ml-3 mt-3 h-3 w-3 rounded-full bg-[#c8bee3]" />
-        <div className="ml-8 -mt-3 h-3 w-7 rounded-full bg-[#d9d9d9]" />
-      </div>
-
-      <div className="absolute left-[30px] top-[70px] h-[70px] w-[80px] rounded-full border-t-[3px] border-[#001a2e]" />
-      <div className="absolute right-[5px] top-[106px] h-[10px] w-[10px] rounded-full bg-[#2f80b5]" />
-      <div className="absolute bottom-[28px] left-[62px] text-[28px] text-[#2f80b5]">
-        ✧
-      </div>
-    </div>
-  );
-}
+import { AppShell } from "../../components/layout/app-shell";
+import { Button } from "../../components/ui/button";
+import { AssignmentCard } from "../../components/assignments/assignment-card";
+import { EmptyAssignments } from "../../components/assignments/empty-assignments";
+import {
+  Assignment,
+  DeleteAssignmentResponse,
+  GetAssignmentsResponse,
+} from "../../types/assignment";
+import { apiRequest } from "../../lib/api";
 
 export default function AssignmentsPage() {
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const fetchAssignments = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+
+      const response = await apiRequest<GetAssignmentsResponse>(
+        "/api/assignments"
+      );
+
+      setAssignments(response.data.assignments);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to fetch assignments"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (assignmentId: string) => {
+    const shouldDelete = window.confirm(
+      "Are you sure you want to delete this assignment?"
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    try {
+      await apiRequest<DeleteAssignmentResponse>(
+        `/api/assignments/${assignmentId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      setAssignments((current) =>
+        current.filter((assignment) => assignment._id !== assignmentId)
+      );
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to delete");
+    }
+  };
+
+  useEffect(() => {
+    fetchAssignments();
+  }, []);
+
   return (
     <AppShell>
-      <section className="flex min-h-[calc(100vh-104px)] items-center justify-center">
-        <div className="flex flex-col items-center text-center">
-          <EmptyAssignmentIllustration />
+      <section>
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="text-[28px] font-extrabold leading-none text-[#303030]">
+              Assignments
+            </h1>
 
-          <h1 className="mt-5 text-[24px] font-extrabold leading-[120%] tracking-[-0.04em] text-text">
-            No assignments yet
-          </h1>
+            <p className="mt-2 text-base text-[#5E5E5E]">
+              Create, manage, and review AI-generated assessments.
+            </p>
+          </div>
 
-          <p className="mt-2 max-w-[520px] text-[16px] font-normal leading-[140%] tracking-[-0.04em] text-[#5E5E5E]/80">
-            Create your first assignment to start collecting and grading student
-            submissions. You can set up rubrics, define marking criteria, and
-            let AI assist with grading.
-          </p>
-
-          <Link href="/assignments/new" className="mt-9">
-            <Button size="lg" className="gap-2 px-8">
-              <span className="text-[24px] leading-none">+</span>
-              <span>Create Your First Assignment</span>
-            </Button>
+          <Link href="/assignments/new">
+            <Button variant="brand">+ Create Assignment</Button>
           </Link>
         </div>
+
+        {isLoading ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-[260px] animate-pulse rounded-[24px] bg-white"
+              />
+            ))}
+          </div>
+        ) : errorMessage ? (
+          <div className="rounded-[24px] bg-white p-8 text-center">
+            <h2 className="text-xl font-bold text-[#303030]">
+              Failed to load assignments
+            </h2>
+
+            <p className="mt-2 text-[#5E5E5E]">{errorMessage}</p>
+
+            <Button className="mt-5" onClick={fetchAssignments}>
+              Try Again
+            </Button>
+          </div>
+        ) : assignments.length === 0 ? (
+          <EmptyAssignments />
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {assignments.map((assignment) => (
+              <AssignmentCard
+                key={assignment._id}
+                assignment={assignment}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        )}
       </section>
     </AppShell>
   );
