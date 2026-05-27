@@ -6,6 +6,8 @@ import { ApiError } from "../utils/api-error";
 import { sendSuccess } from "../utils/api-response";
 import { addGenerationJob } from "../queues/generation.queue";
 import { generationQueue } from "../queues/generation.queue";
+import { ResultModel } from "../models/result.model";
+
 
 const parseQuestionTypes = (value: unknown) => {
   if (!value) {
@@ -217,6 +219,92 @@ export const getAssignmentJobStatus = async (
       jobState,
       progress,
       errorMessage: assignment.errorMessage,
+    });
+
+    return;
+  } catch (error) {
+    next(error);
+    return;
+  }
+};
+
+
+export const regenerateAssignment = async (
+  req: Request<{ assignmentId: string }>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { assignmentId } = req.params;
+
+    if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
+      throw new ApiError(400, "Invalid assignment id");
+    }
+
+    const assignment = await AssignmentModel.findById(assignmentId);
+
+    if (!assignment) {
+      throw new ApiError(404, "Assignment not found");
+    }
+
+    const job = await addGenerationJob(String(assignment._id));
+
+    assignment.status = "pending";
+    assignment.errorMessage = "";
+    if (job.id) {
+      assignment.jobId = String(job.id);
+    }
+
+    await assignment.save();
+
+    sendSuccess(res, 200, "Regeneration job started successfully", {
+      assignment,
+      jobId: job.id,
+    });
+
+    return;
+  } catch (error) {
+    next(error);
+    return;
+  }
+};
+
+export const getAssignmentResult = async (
+  req: Request<{ assignmentId: string }>,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { assignmentId } = req.params;
+
+    if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
+      throw new ApiError(400, "Invalid assignment id");
+    }
+
+    const assignmentObjectId = new mongoose.Types.ObjectId(assignmentId);
+
+    const assignment = await AssignmentModel.findById(assignmentObjectId).select(
+      "-sourceText"
+    );
+
+    if (!assignment) {
+      throw new ApiError(404, "Assignment not found");
+    }
+
+    const result = await ResultModel.findOne({
+      assignmentId: assignmentObjectId,
+    });
+
+    if (!result) {
+      throw new ApiError(
+        404,
+        "Result not generated yet. Please check assignment status."
+      );
+    }
+
+    sendSuccess(res, 200, "Assignment result fetched successfully", {
+      assignment,
+      result,
     });
 
     return;

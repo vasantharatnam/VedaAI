@@ -12,6 +12,7 @@ import {
   AssignmentResultResponse,
   AssignmentStatus,
   QuestionPaper,
+  RegenerateAssignmentResponse,
 } from "../../../../types/assignment";
 import { QuestionPaperPreview } from "../../../../components/assignments/question-paper-preview";
 import { useGenerationSocket } from "../../../../hooks/user-generation-socket";
@@ -110,6 +111,29 @@ export default function AssignmentOutputPage() {
     window.open(`${webEnv.apiUrl}/api/assignments/${assignmentId}/pdf`, "_blank");
   };
 
+  const handleRegenerate = async () => {
+  try {
+    setPaper(null);
+    setStatus("pending");
+    setProgress(0);
+    setErrorMessage("");
+    setMessage("Starting regeneration...");
+
+    await apiRequest<RegenerateAssignmentResponse>(
+      `/api/assignments/${assignmentId}/regenerate`,
+      {
+        method: "POST",
+      }
+    );
+
+    setMessage("Regeneration job started. AI is preparing a new paper...");
+  } catch (error) {
+    setErrorMessage(
+      error instanceof Error ? error.message : "Failed to regenerate paper"
+    );
+  }
+};
+
   const progressValue = Math.max(0, Math.min(progress, 100));
 
   return (
@@ -136,6 +160,10 @@ export default function AssignmentOutputPage() {
               <Link href="/assignments">
                 <Button variant="outline">Back</Button>
               </Link>
+
+               <Button variant="outline" onClick={handleRegenerate}>
+                Regenerate
+               </Button>
 
               <Button
                 variant="brand"

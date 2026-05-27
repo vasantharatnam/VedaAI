@@ -100,3 +100,13 @@ export interface AssignmentResultResponse {
     };
   };
 }
+
+
+export interface RegenerateAssignmentResponse {
+  success: true;
+  message: string;
+  data: {
+    assignment: Assignment;
+    jobId: string;
+  };
+}
