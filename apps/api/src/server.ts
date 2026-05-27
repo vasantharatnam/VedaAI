@@ -5,10 +5,14 @@ import { env } from "./config/env";
 import { connectMongoDB, disconnectMongoDB } from "./config/db";
 import { connectRedis, disconnectRedis } from "./config/redis";
 
+import { startGenerationWorker, stopGenerationWorker } from "./workers/generation.worker";
+
 const startServer = async () => {
    try{
       await connectMongoDB();
       await connectRedis();
+
+      startGenerationWorker();
      
       const server = http.createServer(app);
 
@@ -19,7 +23,9 @@ const startServer = async () => {
       const gracefulShutdown = async () => {
          console.log("Shutting down gracefully...");
 
+         stopGenerationWorker();
          await disconnectRedis();
+         await disconnectMongoDB();
 
          server.close(() => {
             console.log("HTTP server closed");

@@ -5,9 +5,19 @@ import { env } from "./env";
 export const redisConnection = new IORedis({
     host: env.redisHost,
     port: env.redisPort,
-    password: env.redisPassword,
+    ...(env.redisPassword ? { password: env.redisPassword } : {}),
     maxRetriesPerRequest: null,
 });
+
+
+export const getBullMQConnectionOptions = () => {
+  return {
+    host: env.redisHost,
+    port: env.redisPort,
+    ...(env.redisPassword ? { password: env.redisPassword } : {}),
+    maxRetriesPerRequest: null,
+  };
+};
 
 
 export const connectRedis = async (): Promise<void> => {

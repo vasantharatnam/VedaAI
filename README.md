@@ -86,3 +86,23 @@ GET /api/assignments/:assignmentId
 ### Delete Assignment
 
 DELETE /api/assignments/:assignmentId
+
+
+## Background Job Flow
+
+Assignment creation is asynchronous.
+
+```txt
+POST /api/assignments
+        ↓
+Assignment saved with pending status
+        ↓
+BullMQ job added to Redis
+        ↓
+Worker picks job
+        ↓
+Assignment status changes to processing
+        ↓
+Worker completes generation
+        ↓
+Assignment status changes to completed

@@ -4,6 +4,8 @@ import { AssignmentModel } from "../models/assignment.model";
 import { createAssignmentSchema } from "../validations/assignment.validation";
 import { ApiError } from "../utils/api-error";
 import { sendSuccess } from "../utils/api-response";
+import { addGenerationJob } from "../queues/generation.queue";
+import { generationQueue } from "../queues/generation.queue";
 
 const parseQuestionTypes = (value: unknown) => {
   if (!value) {
@@ -79,11 +81,20 @@ export const createAssignment = async (
           }
         : assignmentPayload,
     );
+
+    const job = await addGenerationJob(String(assignment._id));
+
+    if (job.id) {
+      assignment.jobId = String(job.id);
+      await assignment.save();
+    }
+
     sendSuccess(res, 201, "Assignment created successfully", {
       assignment,
+      jobId: job.id,
     });
 
-    return
+    return;
   } catch (error) {
     next(error);
   }
@@ -93,7 +104,7 @@ export const getAssignments = async (
   _req: Request,
   res: Response,
   next: NextFunction,
-) : Promise<void> => {
+): Promise<void> => {
   try {
     const assignments = await AssignmentModel.find()
       .sort({ createdAt: -1 })
@@ -102,10 +113,10 @@ export const getAssignments = async (
     sendSuccess(res, 200, "Assignments fetched successfully", {
       assignments,
     });
-    return
+    return;
   } catch (error) {
     next(error);
-    return
+    return;
   }
 };
 
@@ -113,7 +124,7 @@ export const getAssignmentById = async (
   req: Request<{ assignmentId: string }>,
   res: Response,
   next: NextFunction,
-) : Promise<void> => {
+): Promise<void> => {
   try {
     const { assignmentId } = req.params;
 
@@ -132,7 +143,7 @@ export const getAssignmentById = async (
       assignment,
     });
 
-    return
+    return;
   } catch (error) {
     next(error);
     return;
@@ -143,7 +154,7 @@ export const deleteAssignment = async (
   req: Request<{ assignmentId: string }>,
   res: Response,
   next: NextFunction,
-) : Promise<void> => {
+): Promise<void> => {
   try {
     const { assignmentId } = req.params;
 
@@ -161,9 +172,56 @@ export const deleteAssignment = async (
       assignmentId,
     });
 
-    return
+    return;
   } catch (error) {
     next(error);
-    return
+    return;
+  }
+};
+
+export const getAssignmentJobStatus = async (
+  req: Request<{ assignmentId: string }>,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { assignmentId } = req.params;
+
+    if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
+      throw new ApiError(400, "Invalid assignment id");
+    }
+
+    const assignment = await AssignmentModel.findById(assignmentId).select(
+      "status jobId errorMessage",
+    );
+
+    if (!assignment) {
+      throw new ApiError(404, "Assignment not found");
+    }
+
+    let jobState: string | null = null;
+    let progress = 0;
+
+    if (assignment.jobId) {
+      const job = await generationQueue.getJob(assignment.jobId);
+
+      if (job) {
+        jobState = await job.getState();
+        progress = typeof job.progress === "number" ? job.progress : 0;
+      }
+    }
+
+    sendSuccess(res, 200, "Assignment job status fetched successfully", {
+      assignmentStatus: assignment.status,
+      jobId: assignment.jobId,
+      jobState,
+      progress,
+      errorMessage: assignment.errorMessage,
+    });
+
+    return;
+  } catch (error) {
+    next(error);
+    return;
   }
 };
