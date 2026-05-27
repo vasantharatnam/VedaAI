@@ -1,37 +1,33 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { AppShell } from "../../../components/layout/app-shell";
-import { Card } from "../../../components/ui/card";
+import { CreateAssignmentForm } from "../../../components/assignments/create-assignment-form";
 
 export default function CreateAssignmentPage() {
+  const router = useRouter();
+
   return (
     <AppShell>
       <section>
         <div className="mb-6">
-          <h1 className="text-[28px] font-extrabold leading-none text-text">
+          <p className="text-sm font-medium text-[#5E5E5E]">Assignment</p>
+
+          <h1 className="mt-2 text-[28px] font-extrabold leading-none text-[#303030]">
             Create Assignment
           </h1>
 
-          <p className="mt-2 text-base text-muted">
-            Set up a new assignment for your students.
+          <p className="mt-2 max-w-[620px] text-base leading-7 text-[#5E5E5E]">
+            Upload study material, configure question types, add marks, and let
+            AI generate a structured question paper.
           </p>
         </div>
 
-        <Card className="rounded-xl p-6 lg:p-8">
-          <h2 className="text-xl font-bold text-text">Assignment Details</h2>
-
-          <p className="mt-2 text-sm text-muted">
-            Basic information about your assignment.
-          </p>
-
-          <div className="mt-8 rounded-lg border border-dashed border-text/50 p-10 text-center">
-            <p className="font-semibold">
-              Create form will be implemented next.
-            </p>
-
-            <p className="mt-2 text-sm text-muted">
-              File upload, due date, question types, marks, and instructions.
-            </p>
-          </div>
-        </Card>
+        <CreateAssignmentForm
+          onCreated={(assignmentId) => {
+            router.push(`/assignments/${assignmentId}/output`);
+          }}
+        />
       </section>
     </AppShell>
   );
