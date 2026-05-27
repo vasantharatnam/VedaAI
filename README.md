@@ -36,3 +36,12 @@ AI output is parsed, validated, stored as structured JSON, and then rendered usi
 npm install
 npm run dev:web
 npm run dev:api
+
+## Local Infrastructure
+
+The backend requires MongoDB and Redis.
+
+Start them using:
+
+```bash
+npm run docker:up
