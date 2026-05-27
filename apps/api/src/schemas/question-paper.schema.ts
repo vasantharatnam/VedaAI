@@ -12,7 +12,7 @@ export const questionTypeSchema = z.enum([
 
 export const generatedQuestionSchema = z.object({
     id: z.string().min(1),
-    questions: z.string().min(5),
+    question: z.string().min(5),
     difficulty: difficultySchema,
     marks: z.number().positive(),
     type: questionTypeSchema,

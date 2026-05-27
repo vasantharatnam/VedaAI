@@ -11,6 +11,88 @@ import { generateMockQuestionPaper } from "./mock-question-generator.service";
 const OPENAI_CHAT_COMPLETIONS_URL =
   "https://api.openai.com/v1/chat/completions";
 
+type GenerationProvider = "mock" | "openai";
+
+export type GeneratedQuestionPaperResult = {
+  paper: ValidatedQuestionPaper;
+  provider: GenerationProvider;
+  fallbackReason?: "openai_insufficient_quota";
+};
+
+class OpenAIGenerationError extends Error {
+  readonly status: number;
+  readonly code: string | undefined;
+  readonly type: string | undefined;
+  readonly responseBody: string;
+
+  constructor({
+    status,
+    message,
+    code,
+    type,
+    responseBody,
+  }: {
+    status: number;
+    message: string;
+    code: string | undefined;
+    type: string | undefined;
+    responseBody: string;
+  }) {
+    super(message);
+    this.name = "OpenAIGenerationError";
+    this.status = status;
+    this.code = code;
+    this.type = type;
+    this.responseBody = responseBody;
+  }
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+
+const createOpenAIError = (status: number, responseBody: string) => {
+  let message = responseBody;
+  let code: string | undefined;
+  let type: string | undefined;
+
+  try {
+    const parsed = JSON.parse(responseBody) as unknown;
+
+    if (isRecord(parsed) && isRecord(parsed.error)) {
+      const error = parsed.error;
+      message =
+        typeof error.message === "string" ? error.message : responseBody;
+      code = typeof error.code === "string" ? error.code : undefined;
+      type = typeof error.type === "string" ? error.type : undefined;
+    }
+  } catch {
+    message = responseBody;
+  }
+
+  return new OpenAIGenerationError({
+    status,
+    message: `OpenAI generation failed: ${message}`,
+    code,
+    type,
+    responseBody,
+  });
+};
+
+const isInsufficientQuotaError = (error: unknown) => {
+  if (!(error instanceof OpenAIGenerationError)) {
+    return false;
+  }
+
+  return (
+    error.code === "insufficient_quota" || error.type === "insufficient_quota"
+  );
+};
+
+const generateWithMock = (assignment: AssignmentDocument) => {
+  return questionPaperSchema.parse(generateMockQuestionPaper(assignment));
+};
+
 const questionPaperJsonSchema = {
   name: "question_paper",
   strict: true,
@@ -126,7 +208,7 @@ const generateWithOpenAI = async (
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`OpenAI generation failed: ${errorText}`);
+    throw createOpenAIError(response.status, errorText);
   }
 
    const responseJson = await response.json();
@@ -139,17 +221,32 @@ const generateWithOpenAI = async (
 
 export const generateQuestionPaper = async (
   assignment: AssignmentDocument
-): Promise<ValidatedQuestionPaper> => {
+): Promise<GeneratedQuestionPaperResult> => {
   if (env.aiProvider === "openai") {
     try {
-      return await generateWithOpenAI(assignment);
+      return {
+        paper: await generateWithOpenAI(assignment),
+        provider: "openai",
+      };
     } catch (error) {
-      console.error("AI generation failed. Falling back to mock generator.", error);
+      if (isInsufficientQuotaError(error)) {
+        console.warn(
+          "OpenAI quota exceeded. Falling back to mock question generation.",
+        );
 
-      // Fallback keeps demo stable, but production path is real AI.
-      return questionPaperSchema.parse(generateMockQuestionPaper(assignment));
+        return {
+          paper: generateWithMock(assignment),
+          provider: "mock",
+          fallbackReason: "openai_insufficient_quota",
+        };
+      }
+
+      throw error;
     }
   }
 
-  return questionPaperSchema.parse(generateMockQuestionPaper(assignment));
+  return {
+    paper: generateWithMock(assignment),
+    provider: "mock",
+  };
 };

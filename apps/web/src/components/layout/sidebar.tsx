@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {
   Bot,
-  BookOpen,
   ClipboardList,
   Home,
   Library,
@@ -47,28 +46,28 @@ const navItems = [
 
 export function Sidebar() {
   return (
-    <aside className="hidden h-[calc(100vh-32px)] w-[304px] shrink-0 rounded-[24px] bg-surface p-6 shadow-[0_18px_50px_rgba(0,0,0,0.08)] lg:flex lg:flex-col">
-      <Link href="/assignments" className="mb-10 flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-gradient-to-br from-[#ff8a3d] via-[#c54a24] to-[#55150c] text-[24px] font-black text-white shadow-[0_8px_18px_rgba(255,86,35,0.35)]">
+    <aside className="hidden h-[calc(100vh-32px)] w-[300px] shrink-0 rounded-[16px] bg-surface p-6 shadow-[0_18px_50px_rgba(0,0,0,0.08)] lg:flex lg:flex-col">
+      <Link href="/assignments" className="mb-14 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-gradient-to-br from-[#ff8a3d] via-[#c54a24] to-[#55150c] text-[24px] font-black text-white shadow-[0_8px_18px_rgba(255,86,35,0.35)]">
           V
         </div>
 
-        <span className="text-[28px] font-extrabold leading-none tracking-[-0.06em] text-text">
+        <span className="text-[26px] font-extrabold leading-none tracking-[-0.06em] text-text">
           VedaAI
         </span>
       </Link>
 
-      <Link href="/assignments/new" className="mb-10 block">
+      <Link href="/assignments/new" className="mb-14 block">
         <Button
           variant="figmaDark"
-          className="h-[52px] w-full gap-3 text-[16px]"
+          className="h-[52px] w-full gap-3 text-[16px] shadow-[0_16px_32px_rgba(0,0,0,0.18)]"
         >
           <Sparkles size={18} fill="white" />
           <span>Create Assignment</span>
         </Button>
       </Link>
 
-      <nav className="space-y-2">
+      <nav className="space-y-3">
         {navItems.map((item) => {
           const Icon = item.icon;
 
@@ -77,7 +76,7 @@ export function Sidebar() {
               key={item.label}
               href={item.href}
               className={cn(
-                "flex h-10 items-center gap-2 rounded-[8px] px-3 text-[16px] font-normal leading-[140%] tracking-[-0.04em] text-[#5E5E5E]/80 transition hover:bg-[#eeeeee] hover:text-text",
+                "flex h-10 items-center gap-3 rounded-[8px] px-3 text-[15px] font-normal leading-[140%] tracking-[-0.04em] text-[#5E5E5E]/80 transition hover:bg-[#eeeeee] hover:text-text",
                 item.active && "bg-[#eeeeee] font-medium text-text"
               )}
             >
@@ -97,7 +96,7 @@ export function Sidebar() {
       <div className="mt-auto space-y-4">
         <Link
           href="#"
-          className="flex h-10 items-center gap-2 rounded-[8px] px-3 text-[16px] font-normal leading-[140%] tracking-[-0.04em] text-[#5E5E5E]/80 transition hover:bg-[#eeeeee] hover:text-text"
+          className="flex h-10 items-center gap-3 rounded-[8px] px-3 text-[15px] font-normal leading-[140%] tracking-[-0.04em] text-[#5E5E5E]/80 transition hover:bg-[#eeeeee] hover:text-text"
         >
           <Settings size={18} />
           <span>Settings</span>

@@ -39,7 +39,10 @@ export function EmptyAssignments() {
       </p>
 
       <Link href="/assignments/new" className="mt-7">
-        <Button size="lg" className="gap-2 px-8">
+        <Button
+          size="lg"
+          className="gap-2 bg-[#181818] px-8 hover:bg-[#181818]"
+        >
           <span className="text-xl leading-none">+</span>
           <span>Create Your First Assignment</span>
         </Button>

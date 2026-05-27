@@ -26,7 +26,7 @@ export interface GeneratedQuestion {
 
 export interface QuestionSection {
      title: string;
-     instructions: string;
+     instruction: string;
      questions: GeneratedQuestion[];
 }
 
@@ -41,4 +41,3 @@ export interface QuestionPaper {
     sections: QuestionSection[];
 
 }
-

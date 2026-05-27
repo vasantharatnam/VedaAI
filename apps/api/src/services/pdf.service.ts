@@ -116,7 +116,7 @@ export const generateQuestionPaperPdf = (
       doc
         .font("Helvetica-Oblique")
         .fontSize(10)
-        .text(section.instructions, {
+        .text(section.instruction, {
           lineGap: 3,
         });
 

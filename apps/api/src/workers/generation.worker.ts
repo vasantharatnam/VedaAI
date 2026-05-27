@@ -1,7 +1,6 @@
 import { Worker } from "bullmq";
 import mongoose from "mongoose";
 import { getBullMQConnectionOptions } from "../config/redis";
-import { env } from "../config/env";
 import {
   GENERATION_QUEUE_NAME,
   GenerationJobName,
@@ -70,22 +69,25 @@ export const startGenerationWorker = () => {
         message: "Assignment received. AI generation has started.",
       });
 
-      const paper = await generateQuestionPaper(assignment);
+      const generationResult = await generateQuestionPaper(assignment);
 
       await job.updateProgress(70);
 
        emitGenerationStatus(assignmentId, {
         status: "processing",
         progress: 70,
-        message: "Question paper generated. Saving structured result.",
+        message:
+          generationResult.fallbackReason === "openai_insufficient_quota"
+            ? "OpenAI quota exceeded. Mock question paper generated. Saving structured result."
+            : "Question paper generated. Saving structured result.",
       });
 
       await ResultModel.findOneAndUpdate(
         { assignmentId: assignment._id },
         {
           assignmentId: assignment._id,
-          paper,
-          provider: env.aiProvider === "openai" ? "openai" : "mock",
+          paper: generationResult.paper,
+          provider: generationResult.provider,
         },
         {
           upsert: true,

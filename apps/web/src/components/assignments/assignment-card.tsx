@@ -1,11 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { CalendarDays, FileText, Trash2 } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { Assignment } from "../../types/assignment";
 import { Card } from "../ui/card";
-import { Button } from "../ui/button";
-import { StatusBadge } from "../ui/status-badge";
 
 interface AssignmentCardProps {
   assignment: Assignment;
@@ -15,87 +14,66 @@ interface AssignmentCardProps {
 const formatDate = (date: string) => {
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
-    month: "short",
+    month: "2-digit",
     year: "numeric",
-  }).format(new Date(date));
-};
-
-const getTotals = (assignment: Assignment) => {
-  return assignment.questionTypes.reduce(
-    (acc, item) => {
-      acc.questions += item.count;
-      acc.marks += item.count * item.marks;
-      return acc;
-    },
-    {
-      questions: 0,
-      marks: 0,
-    }
-  );
+  })
+    .format(new Date(date))
+    .replace(/\//g, "-");
 };
 
 export function AssignmentCard({ assignment, onDelete }: AssignmentCardProps) {
-  const totals = getTotals(assignment);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <Card className="overflow-hidden rounded-[24px] p-5 transition hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(0,0,0,0.08)]">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#f4f4f4] text-[#303030]">
-            <FileText size={22} />
-          </div>
+    <Card className="relative min-h-[140px] rounded-[22px] border-0 bg-white p-6 shadow-[0_16px_44px_rgba(0,0,0,0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_48px_rgba(0,0,0,0.10)]">
+      <Link href={`/assignments/${assignment._id}/output`} className="block">
+        <h3 className="max-w-[80%] truncate text-[22px] font-extrabold leading-tight tracking-[-0.04em] text-[#303030] underline decoration-[#303030] decoration-1 underline-offset-2">
+          {assignment.title}
+        </h3>
 
-          <div className="min-w-0">
-            <h3 className="truncate text-[18px] font-extrabold leading-tight text-[#303030]">
-              {assignment.title}
-            </h3>
+        <div className="mt-14 flex items-center justify-between gap-4 text-[14px] tracking-normal">
+          <p className="font-bold text-[#303030]">
+            Assigned on{" "}
+            <span className="font-normal text-[#7d7d7d]">
+              : {formatDate(assignment.createdAt)}
+            </span>
+          </p>
 
-            <p className="mt-1 text-sm text-[#5E5E5E]">
-              {assignment.subject || "General Subject"} ·{" "}
-              {assignment.className || "Class 10"}
-            </p>
-          </div>
+          <p className="font-bold text-[#303030]">
+            Due{" "}
+            <span className="font-normal text-[#7d7d7d]">
+              : {formatDate(assignment.dueDate)}
+            </span>
+          </p>
         </div>
+      </Link>
 
-        <StatusBadge status={assignment.status} />
-      </div>
+      <button
+        onClick={() => setIsMenuOpen((current) => !current)}
+        className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full text-[#9b9b9b] transition hover:bg-[#f2f2f2] hover:text-[#303030]"
+        aria-label="Open assignment actions"
+        aria-expanded={isMenuOpen}
+      >
+        <MoreVertical size={22} />
+      </button>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2">
-        <span className="inline-flex h-7 items-center rounded-full bg-[#f6f6f6] px-3 text-xs font-semibold text-[#5E5E5E]">
-          {totals.questions} Questions
-        </span>
+      {isMenuOpen ? (
+        <div className="absolute right-16 top-11 z-10 w-[196px] rounded-[20px] bg-white p-3 shadow-[0_18px_48px_rgba(0,0,0,0.18)]">
+          <Link
+            href={`/assignments/${assignment._id}/output`}
+            className="block rounded-[12px] px-3 py-3 text-[16px] font-medium tracking-normal text-[#303030] hover:bg-[#f5f5f5]"
+          >
+            View Assignment
+          </Link>
 
-        <span className="inline-flex h-7 items-center rounded-full bg-[#f6f6f6] px-3 text-xs font-semibold text-[#5E5E5E]">
-          {totals.marks} Marks
-        </span>
-      </div>
-
-      <div className="mt-5 flex items-center gap-2 text-sm text-[#5E5E5E]">
-        <CalendarDays size={16} />
-        <span>Due {formatDate(assignment.dueDate)}</span>
-      </div>
-
-      {assignment.uploadedFileName ? (
-        <div className="mt-3 rounded-[12px] bg-[#f6f6f6] px-3 py-2 text-sm text-[#5E5E5E]">
-          Material: {assignment.uploadedFileName}
+          <button
+            onClick={() => onDelete(assignment._id)}
+            className="mt-1 w-full rounded-[12px] bg-[#f5f5f5] px-3 py-3 text-left text-[16px] font-medium tracking-normal text-[#ff1f1f]"
+          >
+            Delete
+          </button>
         </div>
       ) : null}
-
-      <div className="mt-6 flex items-center gap-3">
-        <Link href={`/assignments/${assignment._id}/output`} className="flex-1">
-          <Button className="w-full">
-            {assignment.status === "completed" ? "View Output" : "Track Status"}
-          </Button>
-        </Link>
-
-        <button
-          onClick={() => onDelete(assignment._id)}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#dadada] bg-white text-[#770d0d] transition hover:bg-[#fff4f4]"
-          aria-label="Delete assignment"
-        >
-          <Trash2 size={18} />
-        </button>
-      </div>
     </Card>
   );
 }

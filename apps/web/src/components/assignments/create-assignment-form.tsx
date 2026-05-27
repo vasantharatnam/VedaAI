@@ -1,14 +1,21 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
-import { FileText, Plus, Trash2, UploadCloud } from "lucide-react";
-import { useAssignmentFormStore, questionTypeOptions } from "../../store/assignment-form.store";
+import { useRouter } from "next/navigation";
+import {
+  CalendarDays,
+  ChevronDown,
+  Mic,
+  Plus,
+  Trash2,
+  UploadCloud,
+  X,
+} from "lucide-react";
+import {
+  questionTypeOptions,
+  useAssignmentFormStore,
+} from "../../store/assignment-form.store";
 import { apiRequest } from "../../lib/api";
-import { Button } from "../../components/ui/button";
-import { Card } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Select } from "../../components/ui/select";
-import { Textarea } from "../../components/ui/textarea";
 
 interface CreateAssignmentFormProps {
   onCreated: (assignmentId: string) => void;
@@ -44,6 +51,8 @@ const allowedFileTypes = [
 const maxFileSize = 5 * 1024 * 1024;
 
 export function CreateAssignmentForm({ onCreated }: CreateAssignmentFormProps) {
+  const router = useRouter();
+
   const {
     title,
     subject,
@@ -61,6 +70,10 @@ export function CreateAssignmentForm({ onCreated }: CreateAssignmentFormProps) {
     addQuestionType,
     removeQuestionType,
     updateQuestionType,
+    incrementQuestionCount,
+    decrementQuestionCount,
+    incrementMarks,
+    decrementMarks,
     resetForm,
   } = useAssignmentFormStore();
 
@@ -186,253 +199,307 @@ export function CreateAssignmentForm({ onCreated }: CreateAssignmentFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
-        <div className="space-y-5">
-          <Card className="rounded-[28px] p-6 lg:p-8">
-            <div>
-              <h2 className="text-[22px] font-extrabold text-[#303030]">
-                Assignment Details
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-[#5E5E5E]">
-                Add basic information and optional material for the AI to use.
+    <form onSubmit={handleSubmit} className="relative">
+      <div className="mx-auto max-w-[760px]">
+        <div className="mb-7 flex items-center justify-center gap-2">
+          <div className="h-[4px] w-[360px] rounded-full bg-[#303030]" />
+          <div className="h-[4px] w-[360px] rounded-full bg-[#dadada]" />
+        </div>
+
+        <div className="rounded-[32px] bg-white/80 p-7 shadow-[0_20px_70px_rgba(0,0,0,0.08)] backdrop-blur lg:p-8">
+          <div>
+            <h2 className="text-[22px] font-extrabold leading-none text-[#303030]">
+              Assignment Details
+            </h2>
+            <p className="mt-2 text-[14px] leading-[140%] text-[#5E5E5E]/80">
+              Basic information about your assignment
+            </p>
+          </div>
+
+          <div className="mt-8 rounded-[24px] border-2 border-dashed border-[#dadada] bg-white/60 px-6 py-9 text-center">
+            <input
+              id="assignment-file"
+              type="file"
+              accept=".pdf,.txt,.md,.docx"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+
+            <label
+              htmlFor="assignment-file"
+              className="flex cursor-pointer flex-col items-center justify-center"
+            >
+              <UploadCloud size={26} className="text-[#303030]" />
+
+              <p className="mt-6 text-[16px] font-semibold tracking-[-0.04em] text-[#303030]">
+                Choose a file or drag & drop it here
               </p>
+
+              <p className="mt-2 text-[13px] text-[#A9A9A9]">
+                PDF, TXT, MD, DOCX up to 5MB
+              </p>
+
+              <span className="mt-5 rounded-full bg-[#f2f2f2] px-6 py-3 text-[14px] font-semibold text-[#303030]">
+                Browse Files
+              </span>
+            </label>
+
+            {file ? (
+              <div className="mt-5 inline-flex items-center gap-3 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#303030]">
+                <span>{file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setFile(null)}
+                  className="text-[#770d0d]"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : null}
+
+            {errors.file ? (
+              <p className="mt-3 text-sm font-semibold text-[#770d0d]">
+                {errors.file}
+              </p>
+            ) : null}
+          </div>
+
+          <p className="mt-4 text-center text-[15px] font-medium text-[#5E5E5E]/80">
+            Upload your preferred document/material
+          </p>
+
+          <div className="mt-6">
+            <label className="mb-2 block text-[15px] font-bold text-[#303030]">
+              Assignment Title
+            </label>
+            <input
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="e.g Create Assignment"
+              className="h-[44px] w-full rounded-full border border-[#dadada] bg-white px-5 text-[15px] outline-none focus:border-[#ff5623]"
+            />
+            {errors.title ? (
+              <p className="mt-2 text-sm font-semibold text-[#770d0d]">
+                {errors.title}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-[15px] font-bold text-[#303030]">
+                Subject
+              </label>
+              <input
+                value={subject}
+                onChange={(event) => setSubject(event.target.value)}
+                placeholder="e.g Science"
+                className="h-[44px] w-full rounded-full border border-[#dadada] bg-white px-5 text-[15px] outline-none focus:border-[#ff5623]"
+              />
+              {errors.subject ? (
+                <p className="mt-2 text-sm font-semibold text-[#770d0d]">
+                  {errors.subject}
+                </p>
+              ) : null}
             </div>
 
-            <div className="mt-6 grid gap-5 md:grid-cols-2">
-              <Input
-                label="Assignment Title"
-                placeholder="e.g. Physics Motion Test"
-                value={title}
-                error={errors.title}
-                onChange={(event) => setTitle(event.target.value)}
-              />
-
-              <Input
-                label="Subject"
-                placeholder="e.g. Physics"
-                value={subject}
-                error={errors.subject}
-                onChange={(event) => setSubject(event.target.value)}
-              />
-
-              <Input
-                label="Class"
-                placeholder="e.g. Class 10"
+            <div>
+              <label className="mb-2 block text-[15px] font-bold text-[#303030]">
+                Class
+              </label>
+              <input
                 value={className}
-                error={errors.className}
                 onChange={(event) => setClassName(event.target.value)}
+                placeholder="e.g Class 10"
+                className="h-[44px] w-full rounded-full border border-[#dadada] bg-white px-5 text-[15px] outline-none focus:border-[#ff5623]"
               />
+              {errors.className ? (
+                <p className="mt-2 text-sm font-semibold text-[#770d0d]">
+                  {errors.className}
+                </p>
+              ) : null}
+            </div>
+          </div>
 
-              <Input
-                label="Due Date"
+          <div className="mt-6">
+            <label className="mb-2 block text-[15px] font-bold text-[#303030]">
+              Due Date
+            </label>
+
+            <div className="relative">
+              <input
                 type="date"
                 value={dueDate}
-                error={errors.dueDate}
                 onChange={(event) => setDueDate(event.target.value)}
+                className="h-[44px] w-full rounded-full border border-[#dadada] bg-white px-5 pr-12 text-[15px] text-[#303030] outline-none focus:border-[#ff5623]"
+              />
+
+              <CalendarDays
+                size={20}
+                className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-[#303030]"
               />
             </div>
 
-            <div className="mt-6">
-              <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-[#303030]">
-                  Upload Material Optional
-                </span>
+            {errors.dueDate ? (
+              <p className="mt-2 text-sm font-semibold text-[#770d0d]">
+                {errors.dueDate}
+              </p>
+            ) : null}
+          </div>
 
-                <div className="rounded-[24px] border border-dashed border-[#a9a9a9] bg-[#fafafa] p-6 text-center">
-                  <input
-                    id="assignment-file"
-                    type="file"
-                    accept=".pdf,.txt,.md,.docx"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-
-                  <label
-                    htmlFor="assignment-file"
-                    className="flex cursor-pointer flex-col items-center justify-center"
-                  >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#ff5623] shadow-sm">
-                      <UploadCloud size={24} />
-                    </div>
-
-                    <p className="mt-3 text-sm font-bold text-[#303030]">
-                      Click to upload PDF or text file
-                    </p>
-
-                    <p className="mt-1 text-xs text-[#5E5E5E]">
-                      PDF, TXT, MD, DOCX up to 5MB
-                    </p>
-                  </label>
-
-                  {file ? (
-                    <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#303030]">
-                      <FileText size={16} />
-                      <span>{file.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => setFile(null)}
-                        className="ml-2 text-[#770d0d]"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-
-                {errors.file ? (
-                  <span className="mt-1 block text-sm font-medium text-[#770d0d]">
-                    {errors.file}
-                  </span>
-                ) : null}
-              </label>
-            </div>
-          </Card>
-
-          <Card className="rounded-[28px] p-6 lg:p-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-[22px] font-extrabold text-[#303030]">
-                  Question Configuration
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-[#5E5E5E]">
-                  Choose question types, number of questions, and marks.
-                </p>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addQuestionType}
-                className="shrink-0"
-              >
-                <Plus size={18} />
-                Add Type
-              </Button>
+          <div className="mt-7">
+            <div className="grid grid-cols-[1fr_130px_100px] gap-4 px-1 text-[15px] font-bold text-[#303030]">
+              <span>Question Type</span>
+              <span className="text-center">No. of Questions</span>
+              <span className="text-center">Marks</span>
             </div>
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-3 space-y-3">
               {questionTypes.map((item, index) => (
                 <div
                   key={index}
-                  className="grid gap-3 rounded-[20px] border border-[#eeeeee] bg-[#fafafa] p-4 md:grid-cols-[1fr_140px_140px_44px]"
+                  className="grid grid-cols-[1fr_28px_110px_90px] items-center gap-3"
                 >
-                  <Select
-                    label="Question Type"
-                    value={item.type}
-                    onChange={(event) =>
-                      updateQuestionType(index, "type", event.target.value)
-                    }
-                  >
-                    {questionTypeOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </Select>
+                  <div className="relative">
+                    <select
+                      value={item.type}
+                      onChange={(event) =>
+                        updateQuestionType(index, "type", event.target.value)
+                      }
+                      className="h-[44px] w-full appearance-none rounded-full border-0 bg-white px-5 pr-10 text-[15px] font-medium text-[#303030] outline-none"
+                    >
+                      {questionTypeOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
 
-                  <Input
-                    label="Questions"
-                    type="number"
-                    min={1}
-                    value={item.count}
-                    onChange={(event) =>
-                      updateQuestionType(index, "count", event.target.value)
-                    }
-                  />
-
-                  <Input
-                    label="Marks"
-                    type="number"
-                    min={1}
-                    value={item.marks}
-                    onChange={(event) =>
-                      updateQuestionType(index, "marks", event.target.value)
-                    }
-                  />
+                    <ChevronDown
+                      size={18}
+                      className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#303030]"
+                    />
+                  </div>
 
                   <button
                     type="button"
                     onClick={() => removeQuestionType(index)}
                     disabled={questionTypes.length === 1}
-                    className="mt-7 flex h-11 w-11 items-center justify-center rounded-full border border-[#dadada] bg-white text-[#770d0d] transition hover:bg-[#fff4f4] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-[#303030] disabled:cursor-not-allowed disabled:opacity-30"
                   >
-                    <Trash2 size={18} />
+                    <X size={17} />
                   </button>
+
+                  <div className="flex h-[40px] items-center justify-between rounded-full bg-white px-3">
+                    <button
+                      type="button"
+                      onClick={() => decrementQuestionCount(index)}
+                      className="text-[#dadada]"
+                    >
+                      −
+                    </button>
+                    <span className="text-[15px] font-bold text-[#303030]">
+                      {item.count}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => incrementQuestionCount(index)}
+                      className="text-[#dadada]"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <div className="flex h-[40px] items-center justify-between rounded-full bg-white px-3">
+                    <button
+                      type="button"
+                      onClick={() => decrementMarks(index)}
+                      className="text-[#dadada]"
+                    >
+                      −
+                    </button>
+                    <span className="text-[15px] font-bold text-[#303030]">
+                      {item.marks}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => incrementMarks(index)}
+                      className="text-[#dadada]"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
 
             {errors.questionTypes ? (
-              <p className="mt-3 text-sm font-medium text-[#770d0d]">
+              <p className="mt-3 text-sm font-semibold text-[#770d0d]">
                 {errors.questionTypes}
               </p>
             ) : null}
-          </Card>
 
-          <Card className="rounded-[28px] p-6 lg:p-8">
-            <Textarea
-              label="Additional Instructions"
-              placeholder="Example: Focus on conceptual understanding, include real-life examples, make questions application-based..."
-              value={additionalInstructions}
-              onChange={(event) =>
-                setAdditionalInstructions(event.target.value)
-              }
-            />
-          </Card>
-        </div>
+            <button
+              type="button"
+              onClick={addQuestionType}
+              className="mt-4 inline-flex items-center gap-3 text-[15px] font-bold text-[#303030]"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#303030] text-white">
+                <Plus size={20} />
+              </span>
+              Add Question Type
+            </button>
 
-        <aside className="space-y-5">
-          <Card className="sticky top-6 rounded-[28px] p-6">
-            <h3 className="text-xl font-extrabold text-[#303030]">
-              Assignment Summary
-            </h3>
-
-            <div className="mt-5 space-y-4">
-              <div className="flex items-center justify-between rounded-[16px] bg-[#f6f6f6] px-4 py-3">
-                <span className="text-sm font-medium text-[#5E5E5E]">
-                  Total Questions
-                </span>
-                <span className="text-lg font-extrabold text-[#303030]">
-                  {totals.questions}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between rounded-[16px] bg-[#f6f6f6] px-4 py-3">
-                <span className="text-sm font-medium text-[#5E5E5E]">
-                  Total Marks
-                </span>
-                <span className="text-lg font-extrabold text-[#303030]">
-                  {totals.marks}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between rounded-[16px] bg-[#f6f6f6] px-4 py-3">
-                <span className="text-sm font-medium text-[#5E5E5E]">
-                  Question Types
-                </span>
-                <span className="text-lg font-extrabold text-[#303030]">
-                  {questionTypes.length}
-                </span>
+            <div className="mt-6 flex justify-end">
+              <div className="space-y-2 text-right text-[15px] font-bold text-[#303030]">
+                <p>Total Questions: {totals.questions}</p>
+                <p>Total Marks: {totals.marks}</p>
               </div>
             </div>
+          </div>
 
-            <Button
-              type="submit"
-              variant="brand"
-              size="lg"
-              disabled={isSubmitting}
-              className="mt-6 w-full"
-            >
-              {isSubmitting ? "Creating..." : "Generate Question Paper"}
-            </Button>
+          <div className="mt-7">
+            <label className="mb-3 block text-[15px] font-bold text-[#303030]">
+              Additional Information For better output
+            </label>
 
-            <p className="mt-3 text-center text-xs leading-5 text-[#5E5E5E]">
-              The assignment will be queued and generated asynchronously using
-              AI.
-            </p>
-          </Card>
-        </aside>
+            <div className="relative">
+              <textarea
+                value={additionalInstructions}
+                onChange={(event) =>
+                  setAdditionalInstructions(event.target.value)
+                }
+                placeholder="e.g Generate a question paper for 3 hour exam duration..."
+                className="min-h-[96px] w-full resize-none rounded-[20px] border border-dashed border-[#dadada] bg-white px-5 py-4 pr-12 text-[15px] text-[#303030] outline-none placeholder:text-[#A9A9A9] focus:border-[#ff5623]"
+              />
+
+              <button
+                type="button"
+                className="absolute bottom-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#f6f6f6] text-[#303030]"
+              >
+                <Mic size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-7 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => router.push("/assignments")}
+            className="flex h-[48px] items-center gap-2 rounded-full bg-white px-7 text-[16px] font-semibold text-[#303030] shadow-sm"
+          >
+            ← Previous
+          </button>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex h-[48px] items-center gap-2 rounded-full bg-[#181818] px-7 text-[16px] font-semibold text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? "Generating..." : "Next →"}
+          </button>
+        </div>
       </div>
     </form>
   );

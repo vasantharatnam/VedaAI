@@ -10,17 +10,18 @@ export default function CreateAssignmentPage() {
   return (
     <AppShell>
       <section>
-        <div className="mb-6">
-          <p className="text-sm font-medium text-[#5E5E5E]">Assignment</p>
+        <div className="mb-6 flex items-start gap-3">
+          <span className="mt-1 h-4 w-4 rounded-full border-4 border-[#8ee4aa] bg-[#4bc26d]" />
 
-          <h1 className="mt-2 text-[28px] font-extrabold leading-none text-[#303030]">
-            Create Assignment
-          </h1>
+          <div>
+            <h1 className="text-[22px] font-extrabold leading-none text-[#303030]">
+              Create Assignment
+            </h1>
 
-          <p className="mt-2 max-w-[620px] text-base leading-7 text-[#5E5E5E]">
-            Upload study material, configure question types, add marks, and let
-            AI generate a structured question paper.
-          </p>
+            <p className="mt-2 text-[14px] text-[#A9A9A9]">
+              Set up a new assignment for your students
+            </p>
+          </div>
         </div>
 
         <CreateAssignmentForm
