@@ -1,13 +1,39 @@
 import dotenv from "dotenv";
 import http from "http";
-import app from "./app.js";
+import app from "./app";
+import { env } from "./config/env";
+import { connectMongoDB, disconnectMongoDB } from "./config/db";
+import { connectRedis, disconnectRedis } from "./config/redis";
 
-dotenv.config();
+const startServer = async () => {
+   try{
+      await connectMongoDB();
+      await connectRedis();
+     
+      const server = http.createServer(app);
 
-const PORT = process.env.PORT || 4000;
+      server.listen(env.port, () => {
+         console.log(`Server is running on port ${env.port}`);
+      });
 
-const server = http.createServer(app);
+      const gracefulShutdown = async () => {
+         console.log("Shutting down gracefully...");
 
-server.listen(PORT, () => {
-  console.log(`API server running on http://localhost:${PORT}`);
-});
+         await disconnectRedis();
+
+         server.close(() => {
+            console.log("HTTP server closed");
+             process.exit(0);
+         });
+      };
+
+       process.on("SIGINT", gracefulShutdown);
+       process.on("SIGTERM", gracefulShutdown);
+   } catch(error) {
+      console.error("Error starting server:", error);
+      process.exit(1);
+   }
+}
+
+
+startServer();
