@@ -106,3 +106,21 @@ Assignment status changes to processing
 Worker completes generation
         ↓
 Assignment status changes to completed
+
+
+## AI Generation Strategy
+
+The backend does not render raw LLM output.
+
+The worker converts assignment input into a structured prompt, sends it to the AI provider, requests schema-based JSON output, parses the response, validates it using Zod, and only then stores the structured question paper in MongoDB.
+
+Flow:
+
+```txt
+Assignment input
+  → Structured prompt
+  → LLM call
+  → JSON parse
+  → Zod validation
+  → MongoDB result
+  → Structured frontend rendering

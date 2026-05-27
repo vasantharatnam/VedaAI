@@ -1,6 +1,7 @@
 import { Worker } from "bullmq";
 import mongoose from "mongoose";
 import { getBullMQConnectionOptions } from "../config/redis";
+import { env } from "../config/env";
 import {
   GENERATION_QUEUE_NAME,
   GenerationJobName,
@@ -9,6 +10,8 @@ import {
 } from "../queues/generation.queue";
 
 import { AssignmentModel } from "../models/assignment.model";
+import { generateQuestionPaper } from "../services/ai-generation.service";
+import { ResultModel } from "../models/result.model";
 
 let generationWorker: Worker<
   GenerationJobPayload,
@@ -41,14 +44,36 @@ export const startGenerationWorker = () => {
 
       console.log(`Generation job started: ${job.id}`);
 
+      const assignment = await AssignmentModel.findById(assignmentId);
+
+      if (!assignment) {
+        throw new Error(`Assignment not found for id: ${assignmentId}`);
+      }
+
       await AssignmentModel.findByIdAndUpdate(assignmentId, {
         status: "processing",
         errorMessage: "",
       });
 
-      await job.updateProgress(30);
+      await job.updateProgress(20);
 
-      await sleep(1000);
+      const paper = await generateQuestionPaper(assignment);
+
+      await job.updateProgress(70);
+
+      await ResultModel.findOneAndUpdate(
+        { assignmentId: assignment._id },
+        {
+          assignmentId: assignment._id,
+          paper,
+          provider: env.aiProvider === "openai" ? "openai" : "mock",
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true,
+        },
+      );
 
       await job.updateProgress(90);
 
@@ -93,10 +118,9 @@ export const startGenerationWorker = () => {
   return generationWorker;
 };
 
-
 export const stopGenerationWorker = async () => {
-    if(generationWorker){
-        await generationWorker.close();
-        generationWorker = null;;
-    }
-}
+  if (generationWorker) {
+    await generationWorker.close();
+    generationWorker = null;
+  }
+};

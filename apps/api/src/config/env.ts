@@ -13,4 +13,6 @@ export const  env = {
 
     aiProvider: process.env.AI_PROVIDER || 'mock',
     openaiApiKey: process.env.OPENAI_API_KEY || undefined,
+    openAiModel: process.env.OPENAI_MODEL || "gpt-4o-mini",
+
 }
