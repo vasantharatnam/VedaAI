@@ -18,6 +18,10 @@ const optionalTrimmedValue = (value?: string) => {
     return trimmed || undefined;
 };
 
+const booleanValue = (value?: string) => {
+    return value?.trim().toLowerCase() === "true";
+};
+
 export const  env = {
     port: process.env.PORT || 4000,
     frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -26,6 +30,7 @@ export const  env = {
     redisHost: process.env.REDIS_HOST || 'localhost',
     redisPort: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
     redisPassword: optionalTrimmedValue(process.env.REDIS_PASSWORD),
+    redisTls: booleanValue(process.env.REDIS_TLS),
 
     aiProvider: normalizeAiProvider(process.env.AI_PROVIDER),
     groqApiKey: optionalTrimmedValue(process.env.GROQ_API_KEY),

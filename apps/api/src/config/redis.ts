@@ -6,6 +6,7 @@ export const redisConnection = new IORedis({
     host: env.redisHost,
     port: env.redisPort,
     ...(env.redisPassword ? { password: env.redisPassword } : {}),
+    ...(env.redisTls ? { tls: {} } : {}),
     maxRetriesPerRequest: null,
 });
 
@@ -15,6 +16,7 @@ export const getBullMQConnectionOptions = () => {
     host: env.redisHost,
     port: env.redisPort,
     ...(env.redisPassword ? { password: env.redisPassword } : {}),
+    ...(env.redisTls ? { tls: {} } : {}),
     maxRetriesPerRequest: null,
   };
 };
