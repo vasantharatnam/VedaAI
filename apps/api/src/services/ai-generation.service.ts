@@ -1,5 +1,6 @@
 import { env } from "../config/env";
 import { AssignmentDocument } from "../models/assignment.model";
+import { ZodError } from "zod";
 import {
   questionPaperSchema,
   ValidatedQuestionPaper,
@@ -224,6 +225,12 @@ export const generateQuestionPaper = async (
   } catch (error) {
     if (isGroqCreditUsageCompletedError(error)) {
       throw new Error("credit usage of groq completed");
+    }
+
+    if (error instanceof ZodError) {
+      throw new Error(
+        "AI generated an incomplete question paper. Please adjust the question configuration and try again."
+      );
     }
 
     throw error;

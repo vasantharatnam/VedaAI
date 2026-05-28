@@ -55,6 +55,19 @@ export const createAssignmentSchema = z.object({
     .min(1, "At least one question type is required"),
 
   additionalInstructions: z.string().trim().optional().default(""),
-});
+}).refine(
+  (value) => {
+    const totalQuestions = value.questionTypes.reduce((total, config) => {
+      return total + config.count;
+    }, 0);
+
+    return totalQuestions >= 2;
+  },
+  {
+    path: ["questionTypes"],
+    message:
+      "Please add at least 2 questions. A one-question paper is too small for reliable generation.",
+  }
+);
 
 export type CreateAssignmentInput = z.infer<typeof createAssignmentSchema>;

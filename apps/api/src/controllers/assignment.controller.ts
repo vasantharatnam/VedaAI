@@ -8,6 +8,14 @@ import { addGenerationJob } from "../queues/generation.queue";
 import { generationQueue } from "../queues/generation.queue";
 import { ResultModel } from "../models/result.model";
 
+const oneQuestionPaperMessage =
+  "Please add at least 2 questions. A one-question paper is too small for reliable generation.";
+
+const getTotalQuestions = (assignment: { questionTypes: { count: number }[] }) => {
+  return assignment.questionTypes.reduce((total, config) => {
+    return total + config.count;
+  }, 0);
+};
 
 const parseQuestionTypes = (value: unknown) => {
   if (!value) {
@@ -245,6 +253,10 @@ export const regenerateAssignment = async (
 
     if (!assignment) {
       throw new ApiError(404, "Assignment not found");
+    }
+
+    if (getTotalQuestions(assignment) < 2) {
+      throw new ApiError(400, oneQuestionPaperMessage);
     }
 
     const job = await addGenerationJob(String(assignment._id));

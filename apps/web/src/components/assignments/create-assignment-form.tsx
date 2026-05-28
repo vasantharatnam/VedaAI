@@ -49,6 +49,7 @@ const allowedFileTypes = [
 ];
 
 const maxFileSize = 5 * 1024 * 1024;
+const minTotalQuestions = 2;
 
 export function CreateAssignmentForm({ onCreated }: CreateAssignmentFormProps) {
   const router = useRouter();
@@ -115,6 +116,11 @@ export function CreateAssignmentForm({ onCreated }: CreateAssignmentFormProps) {
 
     if (!questionTypes.length) {
       nextErrors.questionTypes = "At least one question type is required";
+    }
+
+    if (questionTypes.length && totals.questions < minTotalQuestions) {
+      nextErrors.questionTypes =
+        "Please add at least 2 questions. A one-question paper is too small for reliable generation.";
     }
 
     const hasInvalidQuestionConfig = questionTypes.some(
