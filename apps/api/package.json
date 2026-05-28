@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Express TypeScript backend for VedaAI Assessment Creator.",
   "private": true,
-  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
