@@ -31,8 +31,8 @@ export function Topbar() {
         </button>
 
         <button className="flex h-11 items-center gap-3 rounded-full bg-white px-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ffe0c9] text-[20px]">
-            👩‍🏫
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ffe0c9] text-[12px] font-extrabold tracking-normal text-[#303030]">
+            JD
           </div>
 
           <span className="text-[16px] font-semibold tracking-[-0.04em] text-text">
@@ -66,8 +66,8 @@ export function MobileTopbar() {
             <span className="absolute right-[7px] top-[6px] h-[7px] w-[7px] rounded-full bg-brand" />
           </button>
 
-          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f6f6f6] text-[20px]">
-            👩‍🏫
+          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ffe0c9] text-[13px] font-extrabold tracking-normal text-[#303030]">
+            JD
           </button>
 
           <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-text">

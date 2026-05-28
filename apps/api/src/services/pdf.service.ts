@@ -7,6 +7,14 @@ const formatDifficulty = (difficulty: string) => {
   return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
 };
 
+const ensureSpace = (doc: PDFKit.PDFDocument, height: number) => {
+  const bottomLimit = doc.page.height - doc.page.margins.bottom - 36;
+
+  if (doc.y + height > bottomLimit) {
+    doc.addPage();
+  }
+};
+
 export const generateQuestionPaperPdf = (
   res: Response,
   paper: QuestionPaper
@@ -39,7 +47,8 @@ export const generateQuestionPaperPdf = (
 
     // Meta Info
     const metaY = doc.y;
-    const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const pageWidth =
+      doc.page.width - doc.page.margins.left - doc.page.margins.right;
     const colWidth = pageWidth / 2;
 
     doc.fontSize(10).font("Helvetica");
@@ -48,27 +57,45 @@ export const generateQuestionPaperPdf = (
       width: colWidth,
     });
 
-    doc.text(`Class: ${paper.className}`, doc.page.margins.left + colWidth, metaY, {
-      width: colWidth,
-      align: "right",
-    });
+    doc.text(
+      `Class: ${paper.className}`,
+      doc.page.margins.left + colWidth,
+      metaY,
+      {
+        width: colWidth,
+        align: "right",
+      },
+    );
 
     doc.moveDown(0.8);
 
     const secondMetaY = doc.y;
 
-    doc.text(`Time Allowed: ${paper.timeAllowed}`, doc.page.margins.left, secondMetaY, {
-      width: colWidth,
-    });
+    doc.text(
+      `Time Allowed: ${paper.timeAllowed}`,
+      doc.page.margins.left,
+      secondMetaY,
+      {
+        width: colWidth,
+      },
+    );
 
-    doc.text(`Maximum Marks: ${paper.maximumMarks}`, doc.page.margins.left + colWidth, secondMetaY, {
-      width: colWidth,
-      align: "right",
-    });
+    doc.text(
+      `Maximum Marks: ${paper.maximumMarks}`,
+      doc.page.margins.left + colWidth,
+      secondMetaY,
+      {
+        width: colWidth,
+        align: "right",
+      },
+    );
 
     doc.moveDown(1.2);
 
-    doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke();
+    doc
+      .moveTo(doc.page.margins.left, doc.y)
+      .lineTo(doc.page.width - doc.page.margins.right, doc.y)
+      .stroke();
 
     doc.moveDown(1);
 
@@ -123,40 +150,52 @@ export const generateQuestionPaperPdf = (
       doc.moveDown(0.8);
 
       section.questions.forEach((question, index) => {
-        if (doc.y > 720) {
-          doc.addPage();
-        }
+        const numberWidth = 24;
+        const questionX = doc.page.margins.left + numberWidth;
+        const questionWidth = pageWidth - numberWidth;
+        const questionText = question.question;
+
+        doc.font("Helvetica").fontSize(10);
+        const questionHeight = doc.heightOfString(questionText, {
+          width: questionWidth,
+          lineGap: 4,
+        });
+
+        ensureSpace(doc, questionHeight + 32);
 
         const questionStartY = doc.y;
 
-        doc.font("Helvetica-Bold").fontSize(10).text(`${index + 1}.`, {
-          continued: true,
-        });
+        doc
+          .font("Helvetica-Bold")
+          .fontSize(10)
+          .fillColor("#000000")
+          .text(`${index + 1}.`, doc.page.margins.left, questionStartY, {
+            width: numberWidth - 4,
+          });
 
-        doc.font("Helvetica").text(` ${question.question}`, {
-          width: pageWidth - 90,
-          continued: false,
+        doc.font("Helvetica").text(questionText, questionX, questionStartY, {
+          width: questionWidth,
           lineGap: 4,
         });
 
         const afterQuestionY = doc.y;
+        doc.y = afterQuestionY + 4;
 
         doc
           .font("Helvetica")
           .fontSize(9)
           .fillColor("#555555")
           .text(
-            `Difficulty: ${formatDifficulty(question.difficulty)}    Marks: ${question.marks}`,
-            doc.page.width - doc.page.margins.right - 150,
-            questionStartY,
+            `Difficulty: ${formatDifficulty(question.difficulty)}   Marks: ${question.marks}`,
+            questionX,
+            doc.y,
             {
-              width: 150,
-              align: "right",
-            }
+              width: questionWidth,
+              lineGap: 2,
+            },
           );
 
         doc.fillColor("#000000");
-        doc.y = Math.max(afterQuestionY, questionStartY + 22);
         doc.moveDown(0.7);
       });
 

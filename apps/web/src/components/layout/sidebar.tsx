@@ -103,8 +103,8 @@ export function Sidebar() {
         </Link>
 
         <div className="flex h-[76px] items-center gap-3 rounded-[18px] bg-[#f0f0f0] px-4">
-          <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#ffd7c5] text-[28px]">
-            👩‍🏫
+          <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[#ffd7c5] text-[16px] font-extrabold tracking-normal text-[#303030]">
+            DPS
           </div>
 
           <div className="min-w-0">
