@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -13,6 +14,8 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
+import { apiRequest } from "../../lib/api";
+import { GetAssignmentsResponse } from "../../types/assignment";
 
 const navItems = [
   {
@@ -29,7 +32,7 @@ const navItems = [
     label: "Assignments",
     href: "/assignments",
     icon: ClipboardList,
-    badge: "10",
+    badge: "assignments",
     active: true,
   },
   {
@@ -47,12 +50,34 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [assignmentCount, setAssignmentCount] = useState(0);
   const isQuestionPaperPreview = /^\/assignments\/[^/]+\/output$/.test(
     pathname
   );
   const ctaLabel = isQuestionPaperPreview
     ? "AI Teacher's Toolkit"
     : "Create Assignment";
+
+  const fetchAssignmentCount = useCallback(async () => {
+    try {
+      const response =
+        await apiRequest<GetAssignmentsResponse>("/api/assignments");
+
+      setAssignmentCount(response.data.assignments.length);
+    } catch {
+      setAssignmentCount(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAssignmentCount();
+
+    window.addEventListener("assignments:changed", fetchAssignmentCount);
+
+    return () => {
+      window.removeEventListener("assignments:changed", fetchAssignmentCount);
+    };
+  }, [fetchAssignmentCount, pathname]);
 
   return (
     <aside className="hidden h-[calc(100vh-32px)] w-[300px] shrink-0 rounded-[16px] bg-surface p-6 shadow-[0_18px_50px_rgba(0,0,0,0.08)] lg:flex lg:flex-col">
@@ -93,8 +118,10 @@ export function Sidebar() {
               <span className="flex-1">{item.label}</span>
 
               {item.badge ? (
-                <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">
-                  {item.badge}
+                <span className="flex h-6 min-w-10 items-center justify-center rounded-full bg-[#ff5623] px-3 text-sm font-extrabold leading-none text-white">
+                  {item.badge === "assignments"
+                    ? assignmentCount
+                    : item.badge}
                 </span>
               ) : null}
             </Link>

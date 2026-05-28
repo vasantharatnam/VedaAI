@@ -58,6 +58,7 @@ export default function AssignmentsPage() {
       setAssignments((current) =>
         current.filter((assignment) => assignment._id !== assignmentId)
       );
+      window.dispatchEvent(new Event("assignments:changed"));
     } catch (error) {
       alert(error instanceof Error ? error.message : "Failed to delete");
     }
@@ -130,6 +131,21 @@ export default function AssignmentsPage() {
                 />
               ))}
             </div>
+
+            <div
+              aria-hidden
+              className="pointer-events-none fixed bottom-0 right-0 z-10 hidden h-48 lg:left-[332px] lg:block"
+              style={{
+                backdropFilter: "blur(20px) saturate(160%)",
+                WebkitBackdropFilter: "blur(20px) saturate(160%)",
+                maskImage:
+                  "linear-gradient(to bottom, transparent 0%, transparent 45%, rgba(0,0,0,0.9) 70%, black 85%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, transparent 0%, transparent 45%, rgba(0,0,0,0.9) 70%, black 85%)",
+                background:
+                  "linear-gradient(to bottom, rgba(246,246,246,0) 0%, rgba(246,246,246,0) 55%, rgba(246,246,246,0.25) 80%, rgba(246,246,246,0.6) 100%)",
+              }}
+            />
 
             <Link
               href="/assignments/new"

@@ -192,6 +192,7 @@ export function CreateAssignmentForm({ onCreated }: CreateAssignmentFormProps) {
       );
 
       resetForm();
+      window.dispatchEvent(new Event("assignments:changed"));
       onCreated(response.data.assignment._id);
     } catch (error) {
       alert(
