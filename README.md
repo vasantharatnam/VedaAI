@@ -41,6 +41,38 @@ Teacher creates assignment
 
 The application does not render raw AI responses. AI output is parsed, normalized, validated, stored as structured JSON, and then rendered through typed UI components.
 
+## Architecture Overview
+
+VedaAI is organized as a TypeScript monorepo with separate web and API workspaces.
+
+- `apps/web` is a Next.js application that owns the teacher-facing UI, assignment creation flow, generated paper preview, PDF download action, and Socket.IO client updates.
+- `apps/api` is an Express service that owns assignment persistence, API access, background generation orchestration, PDF creation, and Socket.IO status broadcasts.
+- MongoDB stores assignment records and generated question paper results.
+- Redis powers BullMQ so AI generation runs asynchronously outside the request/response lifecycle.
+- A BullMQ worker reads queued generation jobs, calls Groq, validates the structured output, stores the result, and emits progress events.
+
+```txt
+Next.js Web
+  -> REST requests
+  -> Express API
+  -> MongoDB assignments/results
+  -> BullMQ queue on Redis
+  -> Generation worker
+  -> Groq API
+  -> Zod validation
+  -> MongoDB result storage
+  -> Socket.IO progress updates
+  -> Web preview/PDF download
+```
+
+## Approach
+
+The implementation favors structured, validated generation over free-form AI text. Teachers define assignment metadata and question configuration, then the API stores a pending assignment and queues a background job. This keeps the UI responsive and avoids long-running HTTP requests while Groq generates the paper.
+
+Groq output is requested as JSON, normalized for small model-shape differences, validated with Zod, and only then saved. Multiple choice questions are required to include options and answers, and invalid AI output fails the job instead of being silently displayed.
+
+The UI consumes typed API responses and Socket.IO events. While generation is running, the output page subscribes to assignment-specific progress updates. When generation completes, the frontend fetches the persisted result and renders the question paper from structured data.
+
 ## Prerequisites
 
 - Node.js 20.9 or newer for the web app
