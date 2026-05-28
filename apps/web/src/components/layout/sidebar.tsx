@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Bot,
   ClipboardList,
@@ -45,6 +46,14 @@ const navItems = [
 ];
 
 export function Sidebar() {
+  const pathname = usePathname();
+  const isQuestionPaperPreview = /^\/assignments\/[^/]+\/output$/.test(
+    pathname
+  );
+  const ctaLabel = isQuestionPaperPreview
+    ? "AI Teacher's Toolkit"
+    : "Create Assignment";
+
   return (
     <aside className="hidden h-[calc(100vh-32px)] w-[300px] shrink-0 rounded-[16px] bg-surface p-6 shadow-[0_18px_50px_rgba(0,0,0,0.08)] lg:flex lg:flex-col">
       <Link href="/assignments" className="mb-14 flex items-center gap-3">
@@ -63,7 +72,7 @@ export function Sidebar() {
           className="h-[52px] w-full gap-3 text-[16px] shadow-[0_16px_32px_rgba(0,0,0,0.18)]"
         >
           <Sparkles size={18} fill="white" />
-          <span>Create Assignment</span>
+          <span>{ctaLabel}</span>
         </Button>
       </Link>
 
