@@ -123,6 +123,7 @@ export const startGenerationWorker = () => {
     {
       connection: getBullMQConnectionOptions(),
       concurrency: 2,
+      skipVersionCheck: true,
     },
   );
 

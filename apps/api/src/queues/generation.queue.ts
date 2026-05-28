@@ -20,6 +20,7 @@ export const generationQueue = new Queue<GenerationJobPayload>(
 GENERATION_QUEUE_NAME,
   {
     connection: getBullMQConnectionOptions(),
+    skipVersionCheck: true,
     defaultJobOptions: {
       attempts: 3,
       backoff: {
