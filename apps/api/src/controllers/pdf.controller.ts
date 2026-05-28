@@ -5,16 +5,6 @@ import { ResultModel } from "../models/result.model";
 import { ApiError } from "../utils/api-error";
 import { generateQuestionPaperPdf } from "../services/pdf.service";
 
-const getAuthUserId = (req: Request) => {
-  const userId = req.auth?.userId;
-
-  if (!userId) {
-    throw new ApiError(401, "Unauthorized");
-  }
-
-  return userId;
-};
-
 const sanitizeFileName = (value: string) => {
   return value
     .replace(/[^a-zA-Z0-9-_ ]/g, "")
@@ -30,7 +20,6 @@ export const downloadAssignmentPdf = async (
 ): Promise<void> => {
   try {
     const { assignmentId } = req.params;
-    const userId = getAuthUserId(req);
 
     if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
       throw new ApiError(400, "Invalid assignment id");
@@ -38,10 +27,9 @@ export const downloadAssignmentPdf = async (
 
     const assignmentObjectId = new mongoose.Types.ObjectId(assignmentId);
 
-    const assignment = await AssignmentModel.findOne({
-      _id: assignmentObjectId,
-      userId,
-    }).select("title status");
+    const assignment = await AssignmentModel.findById(assignmentObjectId).select(
+      "title status"
+    );
 
     if (!assignment) {
       throw new ApiError(404, "Assignment not found");

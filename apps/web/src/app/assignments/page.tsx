@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
 import { Filter, Plus, Search } from "lucide-react";
 import { AppShell } from "../../components/layout/app-shell";
 import { Button } from "../../components/ui/button";
@@ -16,22 +15,17 @@ import {
 import { apiRequest } from "../../lib/api";
 
 export default function AssignmentsPage() {
-  const { getToken } = useAuth();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const fetchAssignments = useCallback(async () => {
+  const fetchAssignments = async () => {
     try {
       setIsLoading(true);
       setErrorMessage("");
-      const authToken = await getToken();
 
       const response = await apiRequest<GetAssignmentsResponse>(
-        "/api/assignments",
-        {
-          authToken,
-        }
+        "/api/assignments"
       );
 
       setAssignments(response.data.assignments);
@@ -42,7 +36,7 @@ export default function AssignmentsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [getToken]);
+  };
 
   const handleDelete = async (assignmentId: string) => {
     const shouldDelete = window.confirm(
@@ -54,13 +48,10 @@ export default function AssignmentsPage() {
     }
 
     try {
-      const authToken = await getToken();
-
       await apiRequest<DeleteAssignmentResponse>(
         `/api/assignments/${assignmentId}`,
         {
           method: "DELETE",
-          authToken,
         }
       );
 
@@ -74,7 +65,7 @@ export default function AssignmentsPage() {
 
   useEffect(() => {
     fetchAssignments();
-  }, [fetchAssignments]);
+  }, []);
 
   return (
     <AppShell>

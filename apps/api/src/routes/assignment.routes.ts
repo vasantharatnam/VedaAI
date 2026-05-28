@@ -2,11 +2,9 @@ import Router from "express"
 import { createAssignment, deleteAssignment, getAssignmentById, getAssignments, getAssignmentJobStatus, getAssignmentResult, regenerateAssignment} from "../controllers/assignment.controller"
 import { downloadAssignmentPdf } from "../controllers/pdf.controller";
 import { upload } from "../middlewares/upload.middleware"
-import { requireAuth } from "../middlewares/auth.middleware";
 
 const router = Router()
 
-router.use(requireAuth);
 
 router.post('/' , upload.single('file') , createAssignment);
 router.get('/' , getAssignments);

@@ -35,6 +35,5 @@ export const  env = {
     aiProvider: normalizeAiProvider(process.env.AI_PROVIDER),
     groqApiKey: optionalTrimmedValue(process.env.GROQ_API_KEY),
     groqModel: optionalTrimmedValue(process.env.GROQ_MODEL) || "llama-3.3-70b-versatile",
-    clerkSecretKey: optionalTrimmedValue(process.env.CLERK_SECRET_KEY),
 
 }

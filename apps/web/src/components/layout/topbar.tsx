@@ -7,13 +7,8 @@ import {
   Grid2X2,
   Menu,
 } from "lucide-react";
-import { UserButton, useUser } from "@clerk/nextjs";
 
 export function Topbar() {
-  const { user } = useUser();
-  const displayName =
-    user?.fullName || user?.primaryEmailAddress?.emailAddress || "User";
-
   return (
     <header className="hidden h-[58px] w-full items-center justify-between overflow-hidden rounded-[16px] bg-white px-5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] lg:flex">
       <div className="flex items-center gap-4">
@@ -35,31 +30,23 @@ export function Topbar() {
           <span className="absolute right-[8px] top-[7px] h-[7px] w-[7px] rounded-full bg-brand" />
         </button>
 
-        <div className="flex h-11 items-center gap-3 rounded-full bg-white px-2">
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "h-8 w-8",
-              },
-            }}
-          />
+        <button className="flex h-11 items-center gap-3 rounded-full bg-white px-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ffe0c9] text-[12px] font-extrabold tracking-normal text-[#303030]">
+            JD
+          </div>
 
           <span className="text-[16px] font-semibold tracking-[-0.04em] text-text">
-            {displayName}
+            John Doe
           </span>
 
           <ChevronDown size={18} />
-        </div>
+        </button>
       </div>
     </header>
   );
 }
 
 export function MobileTopbar() {
-  const { user } = useUser();
-  const displayName =
-    user?.fullName || user?.primaryEmailAddress?.emailAddress || "User";
-
   return (
     <header className="bg-bg px-3 pb-2 pt-3 lg:hidden">
       <div className="flex h-16 items-center justify-between rounded-[18px] bg-white px-3 shadow-[0_10px_28px_rgba(0,0,0,0.06)]">
@@ -79,18 +66,11 @@ export function MobileTopbar() {
             <span className="absolute right-[7px] top-[6px] h-[7px] w-[7px] rounded-full bg-brand" />
           </button>
 
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: "h-10 w-10",
-              },
-            }}
-          />
+          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ffe0c9] text-[13px] font-extrabold tracking-normal text-[#303030]">
+            JD
+          </button>
 
-          <button
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-text"
-            aria-label={displayName}
-          >
+          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-text">
             <Menu size={24} />
           </button>
         </div>

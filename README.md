@@ -47,7 +47,6 @@ The application does not render raw AI responses. AI output is parsed, normalize
 - npm
 - Docker, for local MongoDB and Redis
 - Groq API key
-- Clerk application keys
 
 ## Environment Setup
 
@@ -69,7 +68,6 @@ REDIS_PASSWORD=
 AI_PROVIDER=GroqApi
 GROQ_API_KEY=your_groq_api_key
 GROQ_MODEL=llama-3.3-70b-versatile
-CLERK_SECRET_KEY=your_clerk_secret_key
 ```
 
 Required frontend values in `apps/web/.env.local`:
@@ -77,12 +75,6 @@ Required frontend values in `apps/web/.env.local`:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_WS_URL=http://localhost:4000
-CLERK_SECRET_KEY=your_clerk_secret_key
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/assignments
-NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/assignments
 ```
 
 ## Local Setup

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
 import { Download } from "lucide-react";
 import { AppShell } from "../../../../components/layout/app-shell";
 import { Button } from "../../../../components/ui/button";
@@ -22,7 +21,6 @@ import { useGenerationSocket } from "../../../../hooks/user-generation-socket";
 export default function AssignmentOutputPage() {
   const params = useParams<{ assignmentId: string }>();
   const assignmentId = params.assignmentId;
-  const { getToken } = useAuth();
 
   const [paper, setPaper] = useState<QuestionPaper | null>(null);
   const [status, setStatus] = useState<AssignmentStatus>("pending");
@@ -32,29 +30,19 @@ export default function AssignmentOutputPage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const fetchResult = useCallback(async () => {
-    const authToken = await getToken();
-
     const response = await apiRequest<AssignmentResultResponse>(
-      `/api/assignments/${assignmentId}/result`,
-      {
-        authToken,
-      }
+      `/api/assignments/${assignmentId}/result`
     );
 
     setPaper(response.data.result.paper);
     setStatus("completed");
     setProgress(100);
     setMessage("Question paper generated successfully.");
-  }, [assignmentId, getToken]);
+  }, [assignmentId]);
 
   const fetchStatus = useCallback(async () => {
-    const authToken = await getToken();
-
     const response = await apiRequest<AssignmentJobStatusResponse>(
-      `/api/assignments/${assignmentId}/status`,
-      {
-        authToken,
-      }
+      `/api/assignments/${assignmentId}/status`
     );
 
     setStatus(response.data.assignmentStatus);
@@ -70,7 +58,7 @@ export default function AssignmentOutputPage() {
     } else {
       setMessage("Preparing your assignment...");
     }
-  }, [assignmentId, getToken]);
+  }, [assignmentId]);
 
   useGenerationSocket({
     assignmentId,
@@ -120,43 +108,8 @@ export default function AssignmentOutputPage() {
     }
   }, [assignmentId, fetchStatus, fetchResult]);
 
-  const handleDownloadPdf = async () => {
-    try {
-      const authToken = await getToken();
-      const response = await fetch(
-        `${webEnv.apiUrl}/api/assignments/${assignmentId}/pdf`,
-        {
-          headers: {
-            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-          },
-        }
-      );
-
-      if (!response.ok) {
-        let message = "Failed to download PDF";
-
-        try {
-          const data = await response.json();
-          message = data.message || message;
-        } catch {
-          // The API may return a non-JSON PDF error response.
-        }
-
-        throw new Error(message);
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "question-paper.pdf";
-      link.click();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to download PDF"
-      );
-    }
+  const handleDownloadPdf = () => {
+    window.open(`${webEnv.apiUrl}/api/assignments/${assignmentId}/pdf`, "_blank");
   };
 
   const handleRegenerate = async () => {
@@ -166,13 +119,11 @@ export default function AssignmentOutputPage() {
     setProgress(0);
     setErrorMessage("");
     setMessage("Starting regeneration...");
-    const authToken = await getToken();
 
     await apiRequest<RegenerateAssignmentResponse>(
       `/api/assignments/${assignmentId}/regenerate`,
       {
         method: "POST",
-        authToken,
       }
     );
 
