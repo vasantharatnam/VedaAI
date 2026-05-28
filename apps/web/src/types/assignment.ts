@@ -38,6 +38,8 @@ export interface GeneratedQuestion {
   difficulty: Difficulty;
   marks: number;
   type: QuestionType;
+  options?: string[];
+  answer?: string;
 }
 
 export interface QuestionSection {

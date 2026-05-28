@@ -119,9 +119,27 @@ export function QuestionPaperPreview({ paper }: QuestionPaperPreviewProps) {
                           {questionIndex + 1}
                         </span>
 
-                        <p className="text-[15px] leading-7 text-[#303030]">
-                          {question.question}
-                        </p>
+                        <div className="min-w-0">
+                          <p className="text-[15px] leading-7 text-[#303030]">
+                            {question.question}
+                          </p>
+
+                          {question.options?.length ? (
+                            <ol className="mt-3 grid gap-2 text-sm leading-6 text-[#303030] sm:grid-cols-2">
+                              {question.options.map((option, optionIndex) => (
+                                <li
+                                  key={`${question.id}-option-${optionIndex}`}
+                                  className="rounded-[12px] bg-white px-3 py-2"
+                                >
+                                  <span className="font-bold">
+                                    {String.fromCharCode(65 + optionIndex)}.
+                                  </span>{" "}
+                                  {option}
+                                </li>
+                              ))}
+                            </ol>
+                          ) : null}
+                        </div>
                       </div>
 
                       <div className="flex shrink-0 items-center gap-2 md:justify-end">

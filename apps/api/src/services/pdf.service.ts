@@ -154,14 +154,16 @@ export const generateQuestionPaperPdf = (
         const questionX = doc.page.margins.left + numberWidth;
         const questionWidth = pageWidth - numberWidth;
         const questionText = question.question;
+        const options = question.options || [];
 
         doc.font("Helvetica").fontSize(10);
         const questionHeight = doc.heightOfString(questionText, {
           width: questionWidth,
           lineGap: 4,
         });
+        const optionsHeight = options.length * 18;
 
-        ensureSpace(doc, questionHeight + 32);
+        ensureSpace(doc, questionHeight + optionsHeight + 38);
 
         const questionStartY = doc.y;
 
@@ -180,6 +182,25 @@ export const generateQuestionPaperPdf = (
 
         const afterQuestionY = doc.y;
         doc.y = afterQuestionY + 4;
+
+        if (options.length > 0) {
+          doc.font("Helvetica").fontSize(9).fillColor("#000000");
+
+          options.forEach((option, optionIndex) => {
+            doc.text(
+              `${String.fromCharCode(65 + optionIndex)}. ${option}`,
+              questionX,
+              doc.y,
+              {
+                width: questionWidth,
+                lineGap: 2,
+              },
+            );
+            doc.moveDown(0.2);
+          });
+
+          doc.moveDown(0.2);
+        }
 
         doc
           .font("Helvetica")

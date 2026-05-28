@@ -41,6 +41,16 @@ const generatedQuestionSchema = new Schema(
         "Long Answer Questions",
       ],
     },
+    options: {
+      type: [String],
+      required: false,
+      default: undefined,
+    },
+    answer: {
+      type: String,
+      required: false,
+      trim: true,
+    },
   },
   {
     _id: false,

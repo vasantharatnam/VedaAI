@@ -55,10 +55,14 @@ STRICT REQUIREMENTS:
    - difficulty: easy, medium, or hard
    - marks
    - type
-5. The sum of marks must be exactly ${maximumMarks}.
-6. Do not include markdown.
-7. Do not include explanation outside JSON.
-8. Do not return raw text.
-9. Return only valid JSON matching the schema.
+5. For every question with type "Multiple Choice Questions":
+   - include options as an array of exactly 4 answer choices
+   - include answer as the exact correct option text from options
+6. For non-multiple-choice questions, omit options unless they are genuinely needed.
+7. The sum of marks must be exactly ${maximumMarks}.
+8. Do not include markdown.
+9. Do not include explanation outside JSON.
+10. Do not return raw text.
+11. Return only valid JSON matching the schema.
 `;
 };

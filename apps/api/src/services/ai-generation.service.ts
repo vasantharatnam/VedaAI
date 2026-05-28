@@ -136,6 +136,15 @@ const normalizeQuestionPaperPayload = (payload: unknown) => {
               typeof question.id === "string"
                 ? question.id
                 : String(question.id ?? ""),
+            options: Array.isArray(question.options)
+              ? question.options.map((option) => String(option))
+              : undefined,
+            answer:
+              typeof question.answer === "string"
+                ? question.answer
+                : question.answer == null
+                  ? undefined
+                  : String(question.answer),
           };
         });
       }
@@ -180,7 +189,7 @@ const generateWithGroq = async (
         {
           role: "system",
           content:
-            "You are an expert academic assessment creator. Return only a valid JSON object that matches this shape: schoolName string, subject string, className string, timeAllowed string, maximumMarks number, generalInstructions array of strings, and sections array. Each section must contain title string, instruction string, and questions array. Each question must contain id string, question string, difficulty easy|medium|hard, marks number, and type string. Do not include markdown or explanatory text.",
+            "You are an expert academic assessment creator. Return only a valid JSON object that matches this shape: schoolName string, subject string, className string, timeAllowed string, maximumMarks number, generalInstructions array of strings, and sections array. Each section must contain title string, instruction string, and questions array. Each question must contain id string, question string, difficulty easy|medium|hard, marks number, and type string. If a question type is Multiple Choice Questions, include options as exactly 4 strings and answer as the exact correct option text. Do not include markdown or explanatory text.",
         },
         {
           role: "user",

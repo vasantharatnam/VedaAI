@@ -16,6 +16,8 @@ export const generatedQuestionSchema = z.object({
     difficulty: difficultySchema,
     marks: z.number().positive(),
     type: questionTypeSchema,
+    options: z.array(z.string().min(1)).optional(),
+    answer: z.string().min(1).optional(),
 });
 
 export const questionSectionSchema = z.object({
