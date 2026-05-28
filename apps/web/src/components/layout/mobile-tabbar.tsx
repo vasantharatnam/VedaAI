@@ -1,51 +1,69 @@
 "use client";
 
 import Link from "next/link";
-import { Bot, ClipboardList, Home, Library } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Briefcase, Grid2X2, Library, Sparkles } from "lucide-react";
 
 const tabs = [
   {
     label: "Home",
     href: "/",
-    icon: Home,
+    icon: Grid2X2,
+    match: "/",
   },
   {
     label: "Assignments",
     href: "/assignments",
-    icon: ClipboardList,
-    active: true,
+    icon: Briefcase,
+    match: "/assignments",
   },
   {
     label: "Library",
-    href: "#",
+    href: "/library",
     icon: Library,
+    match: "/library",
   },
   {
     label: "AI Toolkit",
-    href: "#",
-    icon: Bot,
+    href: "/ai-toolkit",
+    icon: Sparkles,
+    match: "/ai-toolkit",
   },
 ];
 
 export function MobileTabbar() {
+  const pathname = usePathname();
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[28px] bg-dark px-4 pb-4 pt-3 lg:hidden">
-      <div className="grid grid-cols-4 gap-2">
+    <nav className="fixed bottom-7 left-4 right-4 z-50 rounded-[28px] bg-[#181818] px-4 py-3 shadow-[0_18px_44px_rgba(0,0,0,0.28)] lg:hidden">
+      <div className="grid grid-cols-4 gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
+          const isActive =
+            tab.match === "/"
+              ? pathname === "/"
+              : pathname.startsWith(tab.match);
 
           return (
             <Link
               key={tab.label}
               href={tab.href}
+              style={{ color: isActive ? "#ffffff" : "#555555" }}
               className={
-                tab.active
-                  ? "flex flex-col items-center justify-center rounded-full bg-white px-2 py-2 text-xs font-semibold text-dark"
-                  : "flex flex-col items-center justify-center px-2 py-2 text-xs font-medium text-white/70"
+                isActive
+                  ? "flex h-[58px] flex-col items-center justify-center rounded-[14px] px-1 font-extrabold tracking-normal"
+                  : "flex h-[58px] flex-col items-center justify-center rounded-[14px] px-1 font-bold tracking-normal"
               }
             >
-              <Icon size={18} />
-              <span className="mt-1">{tab.label}</span>
+              <Icon
+                size={24}
+                strokeWidth={isActive ? 2.8 : 2.4}
+                color={isActive ? "#ffffff" : "#555555"}
+                fill={isActive ? "currentColor" : "none"}
+              />
+              <span className="mt-1.5 text-[12px] leading-none">
+                {tab.label}
+              </span>
             </Link>
           );
         })}

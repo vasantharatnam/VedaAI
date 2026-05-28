@@ -133,11 +133,14 @@ export default function AssignmentsPage() {
 
             <Link
               href="/assignments/new"
-              className="fixed bottom-24 left-1/2 z-20 -translate-x-1/2 lg:bottom-6"
+              className="fixed bottom-[116px] right-4 z-20 lg:bottom-6 lg:left-1/2 lg:right-auto lg:-translate-x-1/2"
             >
-              <Button className="h-11 gap-2 bg-[#181818] px-6 shadow-[0_14px_34px_rgba(0,0,0,0.24)] hover:bg-[#181818]">
-                <Plus size={18} />
-                <span>Create Your First Assignment</span>
+              <Button
+                aria-label="Create Assignment"
+                className="h-12 w-12 rounded-full bg-white px-0 text-[#ff5623] shadow-[0_14px_34px_rgba(0,0,0,0.18)] hover:bg-white lg:h-11 lg:w-auto lg:gap-2 lg:bg-[#181818] lg:px-6 lg:text-white lg:hover:bg-[#181818]"
+              >
+                <Plus size={22} />
+                <span className="hidden lg:inline">Create Assignment</span>
               </Button>
             </Link>
           </>
