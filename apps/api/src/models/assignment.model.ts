@@ -2,6 +2,7 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 import { AssignmentStatus, QuestionConfig } from "../types/assignment.types";
 
 export interface AssignmentDocument extends Document {
+  userId: string;
   title: string;
   subject?: string;
   className?: string;
@@ -49,6 +50,12 @@ const questionConfigSchema = new Schema<QuestionConfig>(
 
 const assignmentSchema = new Schema<AssignmentDocument>(
   {
+    userId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+
     title: {
       type: String,
       required: true,

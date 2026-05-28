@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@clerk/backend": "^3.4.14",
     "bullmq": "^5.77.6",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

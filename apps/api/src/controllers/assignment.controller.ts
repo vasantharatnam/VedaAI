@@ -8,6 +8,15 @@ import { addGenerationJob } from "../queues/generation.queue";
 import { generationQueue } from "../queues/generation.queue";
 import { ResultModel } from "../models/result.model";
 
+const getAuthUserId = (req: Request) => {
+  const userId = req.auth?.userId;
+
+  if (!userId) {
+    throw new ApiError(401, "Unauthorized");
+  }
+
+  return userId;
+};
 
 const parseQuestionTypes = (value: unknown) => {
   if (!value) {
@@ -49,6 +58,7 @@ export const createAssignment = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
+    const userId = getAuthUserId(req);
     const parsedQuestionTypes = parseQuestionTypes(req.body.questionTypes);
 
     const validatedInput = createAssignmentSchema.parse({
@@ -64,6 +74,7 @@ export const createAssignment = async (
     const sourceText = extractTextFromUploadedFile(file);
 
     const assignmentPayload = {
+      userId,
       title: validatedInput.title,
       subject: validatedInput.subject,
       className: validatedInput.className,
@@ -103,12 +114,13 @@ export const createAssignment = async (
 };
 
 export const getAssignments = async (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const assignments = await AssignmentModel.find()
+    const userId = getAuthUserId(req);
+    const assignments = await AssignmentModel.find({ userId })
       .sort({ createdAt: -1 })
       .select("-sourceText");
 
@@ -129,13 +141,16 @@ export const getAssignmentById = async (
 ): Promise<void> => {
   try {
     const { assignmentId } = req.params;
+    const userId = getAuthUserId(req);
 
     if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
       throw new ApiError(400, "Invalid assignment id");
     }
 
-    const assignment =
-      await AssignmentModel.findById(assignmentId).select("-sourceText");
+    const assignment = await AssignmentModel.findOne({
+      _id: assignmentId,
+      userId,
+    }).select("-sourceText");
 
     if (!assignment) {
       throw new ApiError(404, "Assignment not found");
@@ -159,12 +174,16 @@ export const deleteAssignment = async (
 ): Promise<void> => {
   try {
     const { assignmentId } = req.params;
+    const userId = getAuthUserId(req);
 
     if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
       throw new ApiError(400, "Invalid assignment id");
     }
 
-    const assignment = await AssignmentModel.findByIdAndDelete(assignmentId);
+    const assignment = await AssignmentModel.findOneAndDelete({
+      _id: assignmentId,
+      userId,
+    });
 
     if (!assignment) {
       throw new ApiError(404, "Assignment not found");
@@ -188,14 +207,16 @@ export const getAssignmentJobStatus = async (
 ): Promise<void> => {
   try {
     const { assignmentId } = req.params;
+    const userId = getAuthUserId(req);
 
     if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
       throw new ApiError(400, "Invalid assignment id");
     }
 
-    const assignment = await AssignmentModel.findById(assignmentId).select(
-      "status jobId errorMessage",
-    );
+    const assignment = await AssignmentModel.findOne({
+      _id: assignmentId,
+      userId,
+    }).select("status jobId errorMessage");
 
     if (!assignment) {
       throw new ApiError(404, "Assignment not found");
@@ -236,12 +257,16 @@ export const regenerateAssignment = async (
 ): Promise<void> => {
   try {
     const { assignmentId } = req.params;
+    const userId = getAuthUserId(req);
 
     if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
       throw new ApiError(400, "Invalid assignment id");
     }
 
-    const assignment = await AssignmentModel.findById(assignmentId);
+    const assignment = await AssignmentModel.findOne({
+      _id: assignmentId,
+      userId,
+    });
 
     if (!assignment) {
       throw new ApiError(404, "Assignment not found");
@@ -276,6 +301,7 @@ export const getAssignmentResult = async (
 ): Promise<void> => {
   try {
     const { assignmentId } = req.params;
+    const userId = getAuthUserId(req);
 
     if (!assignmentId || !mongoose.Types.ObjectId.isValid(assignmentId)) {
       throw new ApiError(400, "Invalid assignment id");
@@ -283,9 +309,10 @@ export const getAssignmentResult = async (
 
     const assignmentObjectId = new mongoose.Types.ObjectId(assignmentId);
 
-    const assignment = await AssignmentModel.findById(assignmentObjectId).select(
-      "-sourceText"
-    );
+    const assignment = await AssignmentModel.findOne({
+      _id: assignmentObjectId,
+      userId,
+    }).select("-sourceText");
 
     if (!assignment) {
       throw new ApiError(404, "Assignment not found");

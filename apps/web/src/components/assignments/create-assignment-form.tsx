@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import {
   CalendarDays,
   ChevronDown,
@@ -52,6 +53,7 @@ const maxFileSize = 5 * 1024 * 1024;
 
 export function CreateAssignmentForm({ onCreated }: CreateAssignmentFormProps) {
   const router = useRouter();
+  const { getToken } = useAuth();
 
   const {
     title,
@@ -176,12 +178,15 @@ export function CreateAssignmentForm({ onCreated }: CreateAssignmentFormProps) {
         formData.append("file", file);
       }
 
+      const authToken = await getToken();
+
       const response = await apiRequest<CreateAssignmentResponse>(
         "/api/assignments",
         {
           method: "POST",
           body: formData,
           isFormData: true,
+          authToken,
         }
       );
 
