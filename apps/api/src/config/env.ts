@@ -1,11 +1,16 @@
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ path: ".env", override: true });
+dotenv.config({ path: "apps/api/.env", override: true });
 
-const normalizeAiProvider = (value?: string) => {
-    const provider = (value || 'mock').trim().toLowerCase();
+const normalizeAiProvider = (value?: string): "groq" => {
+    const provider = (value || 'groq').trim().toLowerCase();
 
-    return provider === 'openai' ? 'openai' : 'mock';
+    if (provider === 'groq' || provider === 'groqapi' || provider === 'groq_api') {
+        return 'groq';
+    }
+
+    return 'groq';
 };
 
 const optionalTrimmedValue = (value?: string) => {
@@ -23,7 +28,7 @@ export const  env = {
     redisPassword: optionalTrimmedValue(process.env.REDIS_PASSWORD),
 
     aiProvider: normalizeAiProvider(process.env.AI_PROVIDER),
-    openaiApiKey: optionalTrimmedValue(process.env.OPENAI_API_KEY),
-    openAiModel: optionalTrimmedValue(process.env.OPENAI_MODEL) || "gpt-4o-mini",
+    groqApiKey: optionalTrimmedValue(process.env.GROQ_API_KEY),
+    groqModel: optionalTrimmedValue(process.env.GROQ_MODEL) || "llama-3.3-70b-versatile",
 
 }

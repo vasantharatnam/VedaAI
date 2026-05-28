@@ -94,7 +94,7 @@ export interface AssignmentResultResponse {
       _id: string;
       assignmentId: string;
       paper: QuestionPaper;
-      provider: "mock" | "openai" | "claude" | "oss";
+      provider: "groq" | "claude" | "oss";
       createdAt: string;
       updatedAt: string;
     };

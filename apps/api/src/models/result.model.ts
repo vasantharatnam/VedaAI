@@ -4,7 +4,7 @@ import { QuestionPaper } from "../types/assignment.types";
 export interface ResultDocument extends Document {
   assignmentId: Types.ObjectId;
   paper: QuestionPaper;
-  provider: "mock" | "openai" | "claude" | "oss";
+  provider: "groq" | "claude" | "oss";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -130,8 +130,8 @@ const resultSchema = new Schema<ResultDocument>(
 
     provider: {
       type: String,
-      enum: ["mock", "openai", "claude", "oss"],
-      default: "mock",
+      enum: ["groq", "claude", "oss"],
+      default: "groq",
     },
   },
   {

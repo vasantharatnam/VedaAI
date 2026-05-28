@@ -6,20 +6,18 @@ import {
 } from "../schemas/question-paper.schema";
 
 import { buildQuestionPaperPrompt } from "./prompt-builder.service";
-import { generateMockQuestionPaper } from "./mock-question-generator.service";
 
-const OPENAI_CHAT_COMPLETIONS_URL =
-  "https://api.openai.com/v1/chat/completions";
+const GROQ_CHAT_COMPLETIONS_URL =
+  "https://api.groq.com/openai/v1/chat/completions";
 
-type GenerationProvider = "mock" | "openai";
+type GenerationProvider = "groq";
 
 export type GeneratedQuestionPaperResult = {
   paper: ValidatedQuestionPaper;
   provider: GenerationProvider;
-  fallbackReason?: "openai_insufficient_quota";
 };
 
-class OpenAIGenerationError extends Error {
+class GroqGenerationError extends Error {
   readonly status: number;
   readonly code: string | undefined;
   readonly type: string | undefined;
@@ -39,7 +37,7 @@ class OpenAIGenerationError extends Error {
     responseBody: string;
   }) {
     super(message);
-    this.name = "OpenAIGenerationError";
+    this.name = "GroqGenerationError";
     this.status = status;
     this.code = code;
     this.type = type;
@@ -51,7 +49,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
-const createOpenAIError = (status: number, responseBody: string) => {
+const createGroqGenerationError = (
+  status: number,
+  responseBody: string,
+) => {
   let message = responseBody;
   let code: string | undefined;
   let type: string | undefined;
@@ -70,183 +71,152 @@ const createOpenAIError = (status: number, responseBody: string) => {
     message = responseBody;
   }
 
-  return new OpenAIGenerationError({
+  return new GroqGenerationError({
     status,
-    message: `OpenAI generation failed: ${message}`,
+    message: `GROQ generation failed: ${message}`,
     code,
     type,
     responseBody,
   });
 };
 
-const isInsufficientQuotaError = (error: unknown) => {
-  if (!(error instanceof OpenAIGenerationError)) {
+const isGroqCreditUsageCompletedError = (error: unknown) => {
+  if (!(error instanceof GroqGenerationError)) {
     return false;
   }
 
+  const searchableText = [
+    error.code,
+    error.type,
+    error.message,
+    error.responseBody,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
   return (
-    error.code === "insufficient_quota" || error.type === "insufficient_quota"
+    error.status === 402 ||
+    searchableText.includes("insufficient_quota") ||
+    searchableText.includes("quota") ||
+    searchableText.includes("credit") ||
+    searchableText.includes("billing") ||
+    searchableText.includes("balance")
   );
 };
 
-const generateWithMock = (assignment: AssignmentDocument) => {
-  return questionPaperSchema.parse(generateMockQuestionPaper(assignment));
+const normalizeQuestionPaperPayload = (payload: unknown) => {
+  if (!isRecord(payload)) {
+    return payload;
+  }
+
+  const normalized = { ...payload };
+
+  if (typeof normalized.generalInstructions === "string") {
+    normalized.generalInstructions = [normalized.generalInstructions];
+  }
+
+  if (Array.isArray(normalized.sections)) {
+    normalized.sections = normalized.sections.map((section) => {
+      if (!isRecord(section)) {
+        return section;
+      }
+
+      const normalizedSection = { ...section };
+
+      if (Array.isArray(normalizedSection.questions)) {
+        normalizedSection.questions = normalizedSection.questions.map((question) => {
+          if (!isRecord(question)) {
+            return question;
+          }
+
+          return {
+            ...question,
+            id:
+              typeof question.id === "string"
+                ? question.id
+                : String(question.id ?? ""),
+          };
+        });
+      }
+
+      return normalizedSection;
+    });
+  }
+
+  return normalized;
 };
 
-const questionPaperJsonSchema = {
-  name: "question_paper",
-  strict: true,
-  schema: {
-    type: "object",
-    additionalProperties: false,
-    required: [
-      "schoolName",
-      "subject",
-      "className",
-      "timeAllowed",
-      "maximumMarks",
-      "generalInstructions",
-      "sections",
-    ],
-    properties: {
-      schoolName: { type: "string" },
-      subject: { type: "string" },
-      className: { type: "string" },
-      timeAllowed: { type: "string" },
-      maximumMarks: { type: "number" },
-      generalInstructions: {
-        type: "array",
-        items: { type: "string" },
-      },
-      sections: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["title", "instruction", "questions"],
-          properties: {
-            title: { type: "string" },
-            instruction: { type: "string" },
-            questions: {
-              type: "array",
-              items: {
-                type: "object",
-                additionalProperties: false,
-                required: ["id", "question", "difficulty", "marks", "type"],
-                properties: {
-                  id: { type: "string" },
-                  question: { type: "string" },
-                  difficulty: {
-                    type: "string",
-                    enum: ["easy", "medium", "hard"],
-                  },
-                  marks: { type: "number" },
-                  type: {
-                    type: "string",
-                    enum: [
-                      "Multiple Choice Questions",
-                      "Short Questions",
-                      "Diagram/Graph-Based Questions",
-                      "Numerical Problems",
-                      "Long Answer Questions",
-                    ],
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-};
-
-const extractOpenAIContent = (responseJson: any): string => {
+const extractGroqContent = (responseJson: any): string => {
   const content = responseJson?.choices?.[0]?.message?.content;
 
   if (typeof content !== "string" || content.trim().length === 0) {
-    throw new Error("OpenAI response did not contain valid content");
+    throw new Error("GROQ response did not contain valid content");
   }
 
   return content;
 };
 
-const generateWithOpenAI = async (
+const generateWithGroq = async (
   assignment: AssignmentDocument,
 ): Promise<ValidatedQuestionPaper> => {
-  if (!env.openaiApiKey) {
-    throw new Error("OPENAI_API_KEY is missing");
+  if (!env.groqApiKey) {
+    throw new Error("GROQ_API_KEY is missing");
   }
 
   const prompt = buildQuestionPaperPrompt(assignment);
 
-  const response = await fetch(OPENAI_CHAT_COMPLETIONS_URL, {
+  console.log(`Generating question paper with groq:${env.groqModel}`);
+
+  const response = await fetch(GROQ_CHAT_COMPLETIONS_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${env.openaiApiKey}`,
+      Authorization: `Bearer ${env.groqApiKey}`,
       "Content-Type": "application/json",
     },
      body: JSON.stringify({
-      model: env.openAiModel,
+      model: env.groqModel,
       messages: [
         {
           role: "system",
           content:
-            "You are an expert academic assessment creator. Return only valid JSON that matches the provided schema.",
+            "You are an expert academic assessment creator. Return only a valid JSON object that matches this shape: schoolName string, subject string, className string, timeAllowed string, maximumMarks number, generalInstructions array of strings, and sections array. Each section must contain title string, instruction string, and questions array. Each question must contain id string, question string, difficulty easy|medium|hard, marks number, and type string. Do not include markdown or explanatory text.",
         },
         {
           role: "user",
           content: prompt,
         },
       ],
-      response_format: {
-        type: "json_schema",
-        json_schema: questionPaperJsonSchema,
-      },
+      response_format: { type: "json_object" },
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw createOpenAIError(response.status, errorText);
+    throw createGroqGenerationError(response.status, errorText);
   }
 
    const responseJson = await response.json();
-  const content = extractOpenAIContent(responseJson);
+  const content = extractGroqContent(responseJson);
 
   const parsed = JSON.parse(content);
 
-   return questionPaperSchema.parse(parsed);
+   return questionPaperSchema.parse(normalizeQuestionPaperPayload(parsed));
 };
 
 export const generateQuestionPaper = async (
   assignment: AssignmentDocument
 ): Promise<GeneratedQuestionPaperResult> => {
-  if (env.aiProvider === "openai") {
-    try {
-      return {
-        paper: await generateWithOpenAI(assignment),
-        provider: "openai",
-      };
-    } catch (error) {
-      if (isInsufficientQuotaError(error)) {
-        console.warn(
-          "OpenAI quota exceeded. Falling back to mock question generation.",
-        );
-
-        return {
-          paper: generateWithMock(assignment),
-          provider: "mock",
-          fallbackReason: "openai_insufficient_quota",
-        };
-      }
-
-      throw error;
+  try {
+    return {
+      paper: await generateWithGroq(assignment),
+      provider: env.aiProvider,
+    };
+  } catch (error) {
+    if (isGroqCreditUsageCompletedError(error)) {
+      throw new Error("credit usage of groq completed");
     }
-  }
 
-  return {
-    paper: generateWithMock(assignment),
-    provider: "mock",
-  };
+    throw error;
+  }
 };

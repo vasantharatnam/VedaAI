@@ -76,10 +76,7 @@ export const startGenerationWorker = () => {
        emitGenerationStatus(assignmentId, {
         status: "processing",
         progress: 70,
-        message:
-          generationResult.fallbackReason === "openai_insufficient_quota"
-            ? "OpenAI quota exceeded. Mock question paper generated. Saving structured result."
-            : "Question paper generated. Saving structured result.",
+        message: "Question paper generated. Saving structured result.",
       });
 
       await ResultModel.findOneAndUpdate(
