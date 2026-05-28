@@ -149,7 +149,7 @@ export default function AssignmentsPage() {
 
             <Link
               href="/assignments/new"
-              className="fixed bottom-[116px] right-4 z-20 lg:bottom-6 lg:left-1/2 lg:right-auto lg:-translate-x-1/2"
+              className="fixed bottom-[116px] right-4 z-20 lg:bottom-6 lg:left-[calc(332px+(100vw-332px)/2)] lg:right-auto lg:-translate-x-1/2"
             >
               <Button
                 aria-label="Create Assignment"

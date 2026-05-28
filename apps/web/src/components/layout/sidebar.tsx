@@ -57,6 +57,15 @@ export function Sidebar() {
   const ctaLabel = isQuestionPaperPreview
     ? "AI Teacher's Toolkit"
     : "Create Assignment";
+  const ctaButton = (
+    <Button
+      variant="figmaDark"
+      className="h-[52px] w-full gap-3 text-[16px] shadow-[0_16px_32px_rgba(0,0,0,0.18)]"
+    >
+      <Sparkles size={18} fill="white" />
+      <span>{ctaLabel}</span>
+    </Button>
+  );
 
   const fetchAssignmentCount = useCallback(async () => {
     try {
@@ -91,15 +100,13 @@ export function Sidebar() {
         </span>
       </Link>
 
-      <Link href="/assignments/new" className="mb-14 block">
-        <Button
-          variant="figmaDark"
-          className="h-[52px] w-full gap-3 text-[16px] shadow-[0_16px_32px_rgba(0,0,0,0.18)]"
-        >
-          <Sparkles size={18} fill="white" />
-          <span>{ctaLabel}</span>
-        </Button>
-      </Link>
+      {isQuestionPaperPreview ? (
+        <div className="mb-14">{ctaButton}</div>
+      ) : (
+        <Link href="/assignments/new" className="mb-14 block">
+          {ctaButton}
+        </Link>
+      )}
 
       <nav className="space-y-3">
         {navItems.map((item) => {
